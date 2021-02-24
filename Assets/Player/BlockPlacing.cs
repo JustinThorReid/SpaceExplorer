@@ -6,40 +6,53 @@ public class BlockPlacing : MonoBehaviour
 {
     public Grid grid;
     public Transform highlight;
-    
-    // Start is called before the first frame update
-    void Start()
-    {
+
+    private int selectedItem = 0;
+    private GameManager gameManager;
+
+    private void Awake() {
+        gameManager = FindObjectOfType<GameManager>();
     }
 
-    // Update is called once per frame
+    private void OnGUI() {
+        for(int i = 0; i < gameManager.allItems.Length; i++) {
+            if(i == selectedItem)
+                GUI.color = Color.red;
+            else
+                GUI.color = Color.white;
+
+            GUI.Label(new Rect(10, 10 + 20 * i, 250, 20), gameManager.allItems[i].name);
+        }
+    }
+
     void Update() {
+        if(Input.GetAxis("Mouse ScrollWheel") > 0) {
+            selectedItem = Mathf.Min(selectedItem + 1, gameManager.allItems.Length - 1);
+        }
+        if(Input.GetAxis("Mouse ScrollWheel") < 0) {
+            selectedItem = Mathf.Max(0, selectedItem - 1);
+        }
+
         Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2I blockPos = grid.ConvertWorldSpaceToLargeBlockSpace(worldMousePos);
+        Vector2I blockPos;
+        if(gameManager.allItems[selectedItem].createsBlock.isLarge) {
+            blockPos = grid.ConvertWorldSpaceToLargeBlockSpace(worldMousePos);
+        } else {
+            blockPos = grid.ConvertWorldSpaceToBlockSpace(worldMousePos);
+        }
+
+
         Vector2 worldPos = grid.ConvertBlockSpaceToWorldSpace(blockPos);
 
         highlight.position = worldPos;
         highlight.localRotation = grid.transform.rotation;
 
         if(Input.GetButtonUp("Fire1")) {
-            grid.TryAddBlock(CreateBlockInstance(0), blockPos);
-        }
-        if(Input.GetButtonUp("Fire2")) {
-            grid.TryAddBlock(CreateBlockInstance(1), blockPos);
+            grid.TryAddBlock(CreateBlockInstance(selectedItem), blockPos);
         }
     }
 
     private Block CreateBlockInstance(int type) {
-        Block block = ScriptableObject.CreateInstance<Block>();
-
-        if(type == 0) {
-            block.layer = 0;
-            block.hasCollider = true;
-        }
-        if(type == 1) {
-            block.layer = 1;
-            block.hasCollider = false;
-        }
-        return block;
+        return gameManager.allItems[selectedItem].createsBlock;
     }
 }

@@ -6,7 +6,6 @@ public class GridChunk : MonoBehaviour
 {
     private List<Block>[,] gridData;
 
-    public PlacedBlock mainPrefab;
     private uint chunkSize;
     private float blockSize;
 
@@ -24,7 +23,6 @@ public class GridChunk : MonoBehaviour
         }
     }
 
-
     /**
      * Add block in base grid should be resposible for checking/placing the block at all grid locations for a multiblock
      * The block class is not user code and should contain logic for checking if allowed
@@ -35,15 +33,14 @@ public class GridChunk : MonoBehaviour
         Debug.Assert(blockCoord.y >= 0 && blockCoord.y < chunkSize);
         Debug.Assert(block != null, "Can not add 'nothing' to grid space!");
 
-        if (gridData[blockCoord.x, blockCoord.y] == null) gridData[blockCoord.x, blockCoord.y] = new List<Block>();
-        gridData[blockCoord.x, blockCoord.y].Add(block);
-
-        PlacedBlock placedBlock = Instantiate(mainPrefab);
+        Block placedBlock = Instantiate(block);
         placedBlock.transform.parent = transform;
         placedBlock.transform.localPosition = ConvertBlockSpaceToLocalSpace(blockCoord);
         placedBlock.transform.localRotation = Quaternion.identity;
 
-        placedBlock.Init(block);
+        if(gridData[blockCoord.x, blockCoord.y] == null)
+            gridData[blockCoord.x, blockCoord.y] = new List<Block>();
+        gridData[blockCoord.x, blockCoord.y].Add(placedBlock);
 
         return true;
     }
