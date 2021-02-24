@@ -15,7 +15,7 @@ public class BlockPlacing : MonoBehaviour
     // Update is called once per frame
     void Update() {
         Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2I blockPos = grid.ConvertWorldSpaceToBlockSpace(worldMousePos);
+        Vector2I blockPos = grid.ConvertWorldSpaceToLargeBlockSpace(worldMousePos);
         Vector2 worldPos = grid.ConvertBlockSpaceToWorldSpace(blockPos);
 
         highlight.position = worldPos;

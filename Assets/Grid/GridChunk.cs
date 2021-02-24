@@ -4,18 +4,21 @@ using UnityEngine;
 
 public class GridChunk : MonoBehaviour 
 {
-    public static readonly uint CHUNK_SIZE = 20;
-    public static readonly int BLOCKS_PER_UNIT = 1;
-    public static readonly float UNITS_PER_BLOCK = 1 / (float)BLOCKS_PER_UNIT;
-
     private List<Block>[,] gridData;
 
     public PlacedBlock mainPrefab;
+    private uint chunkSize;
+    private float blockSize;
 
-    void Awake() {
-        gridData = new List<Block>[CHUNK_SIZE, CHUNK_SIZE];
-        for(uint x = 0; x < CHUNK_SIZE; x++) {
-            for(uint y = 0; y < CHUNK_SIZE; y++) {
+    public void Init(uint size, float blockSize) {
+        this.chunkSize = size;
+        this.blockSize = blockSize;
+
+        gridData = new List<Block>[chunkSize, chunkSize];
+        for (uint x = 0; x < chunkSize; x++)
+        {
+            for (uint y = 0; y < chunkSize; y++)
+            {
                 gridData[x, y] = new List<Block>(2);
             }
         }
@@ -28,10 +31,11 @@ public class GridChunk : MonoBehaviour
      * Ideally there is some way of using a simple bool check for is present (maybe a common function like "not null")
      */
     public bool AddBlock(Block block, Vector2I blockCoord) {
-        Debug.Assert(blockCoord.x >= 0 && blockCoord.x < CHUNK_SIZE);
-        Debug.Assert(blockCoord.y >= 0 && blockCoord.y < CHUNK_SIZE);
+        Debug.Assert(blockCoord.x >= 0 && blockCoord.x < chunkSize);
+        Debug.Assert(blockCoord.y >= 0 && blockCoord.y < chunkSize);
         Debug.Assert(block != null, "Can not add 'nothing' to grid space!");
 
+        if (gridData[blockCoord.x, blockCoord.y] == null) gridData[blockCoord.x, blockCoord.y] = new List<Block>();
         gridData[blockCoord.x, blockCoord.y].Add(block);
 
         PlacedBlock placedBlock = Instantiate(mainPrefab);
@@ -45,8 +49,8 @@ public class GridChunk : MonoBehaviour
     }
 
     public List<Block> GetBlockColumn(Vector2I blockCoord) {
-        Debug.Assert(blockCoord.x >= 0 && blockCoord.x < CHUNK_SIZE);
-        Debug.Assert(blockCoord.y >= 0 && blockCoord.y < CHUNK_SIZE);
+        Debug.Assert(blockCoord.x >= 0 && blockCoord.x < chunkSize);
+        Debug.Assert(blockCoord.y >= 0 && blockCoord.y < chunkSize);
       
         return gridData[blockCoord.x, blockCoord.y] ?? new List<Block>();
     }
@@ -58,9 +62,9 @@ public class GridChunk : MonoBehaviour
     /// <param name="chunkSpaceBlockPos"></param>
     /// <returns>Center of the block</returns>
     private Vector2 ConvertBlockSpaceToLocalSpace(Vector2I chunkSpaceBlockPos) {
-        Debug.Assert(chunkSpaceBlockPos.x >= 0 && chunkSpaceBlockPos.x < CHUNK_SIZE);
-        Debug.Assert(chunkSpaceBlockPos.y >= 0 && chunkSpaceBlockPos.y < CHUNK_SIZE);
+        Debug.Assert(chunkSpaceBlockPos.x >= 0 && chunkSpaceBlockPos.x < chunkSize);
+        Debug.Assert(chunkSpaceBlockPos.y >= 0 && chunkSpaceBlockPos.y < chunkSize);
 
-        return (chunkSpaceBlockPos * UNITS_PER_BLOCK);
+        return (chunkSpaceBlockPos * blockSize);
     }
 }

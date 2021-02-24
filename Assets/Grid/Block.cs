@@ -6,6 +6,7 @@ public class Block : ScriptableObject {
     public uint layer = 0;
     public bool hasCollider = true;
     public float mass = 80;
+    public bool isLarge = true;
 
     public bool CanBePlacedIn(List<Block> column) {
         foreach(Block existing in column) {
