@@ -96,7 +96,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a23648678e44bb44fa6b0baee4d9b13a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layer: 0
+  layer: 10
   hasCollider: 1
   mass: 80
   isLarge: 1

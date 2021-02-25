@@ -15,9 +15,9 @@ public class Block : MonoBehaviour {
                 return false;
         }
 
-        if(this.layer == 0) {
+        if(this.layer == 10) {
             return column.Exists(existing => {
-                return existing.layer == 5;
+                return existing.layer == 0;
             });
         } else {
             return true;
@@ -27,7 +27,7 @@ public class Block : MonoBehaviour {
     // Use this for initialization
     void Start() {
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
-        sr.rendererPriority = (int)layer;
+        sr.sortingOrder = (int)layer;
 
         if(hasCollider) {
             BoxCollider2D collider = gameObject.AddComponent<BoxCollider2D>();

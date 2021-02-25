@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEngine;
 
 public class GridChunk : MonoBehaviour 
@@ -45,11 +46,11 @@ public class GridChunk : MonoBehaviour
         return true;
     }
 
-    public List<Block> GetBlockColumn(Vector2I blockCoord) {
+    public ReadOnlyCollection<Block> GetBlockColumn(Vector2I blockCoord) {
         Debug.Assert(blockCoord.x >= 0 && blockCoord.x < chunkSize);
         Debug.Assert(blockCoord.y >= 0 && blockCoord.y < chunkSize);
       
-        return gridData[blockCoord.x, blockCoord.y] ?? new List<Block>();
+        return gridData[blockCoord.x, blockCoord.y].AsReadOnly() ?? new List<Block>().AsReadOnly();
     }
 
     /// <summary>
@@ -62,6 +63,6 @@ public class GridChunk : MonoBehaviour
         Debug.Assert(chunkSpaceBlockPos.x >= 0 && chunkSpaceBlockPos.x < chunkSize);
         Debug.Assert(chunkSpaceBlockPos.y >= 0 && chunkSpaceBlockPos.y < chunkSize);
 
-        return (chunkSpaceBlockPos * blockSize);
+        return (chunkSpaceBlockPos * blockSize) + new Vector2(blockSize * 0.5f, blockSize * 0.5f);
     }
 }

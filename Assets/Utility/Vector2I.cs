@@ -102,7 +102,7 @@ public class Vector2I {
         return x ^ y;
     }
 
-    public String ToString() {
+    public override String ToString() {
         return "[" + x + "," + y + "]";
     }
 }

@@ -37,14 +37,16 @@ public class BlockPlacing : MonoBehaviour
         Vector2I blockPos;
         if(gameManager.allItems[selectedItem].createsBlock.isLarge) {
             blockPos = grid.ConvertWorldSpaceToLargeBlockSpace(worldMousePos);
+            Vector2 worldPos = grid.ConvertBlockSpaceToWorldSpace(blockPos);
+            highlight.position = worldPos + new Vector2(Grid.UNITS_PER_BLOCK_LARGE * 0.5f, Grid.UNITS_PER_BLOCK_LARGE * 0.5f);
+            highlight.localScale = new Vector3(Grid.UNITS_PER_BLOCK_LARGE, Grid.UNITS_PER_BLOCK_LARGE, Grid.UNITS_PER_BLOCK_LARGE);
         } else {
             blockPos = grid.ConvertWorldSpaceToBlockSpace(worldMousePos);
+            Vector2 worldPos = grid.ConvertBlockSpaceToWorldSpace(blockPos);
+            highlight.position = worldPos + new Vector2(Grid.UNITS_PER_BLOCK * 0.5f, Grid.UNITS_PER_BLOCK * 0.5f);
+            highlight.localScale = new Vector3(Grid.UNITS_PER_BLOCK, Grid.UNITS_PER_BLOCK, Grid.UNITS_PER_BLOCK);
         }
 
-
-        Vector2 worldPos = grid.ConvertBlockSpaceToWorldSpace(blockPos);
-
-        highlight.position = worldPos;
         highlight.localRotation = grid.transform.rotation;
 
         if(Input.GetButtonUp("Fire1")) {

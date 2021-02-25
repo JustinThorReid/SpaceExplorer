@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using UnityEngine;
 
 public class Grid : MonoBehaviour {
@@ -20,6 +22,13 @@ public class Grid : MonoBehaviour {
     void Start() {
         chunks = new Dictionary<Vector2I, GridChunk>();
         largeChunks = new Dictionary<Vector2I, GridChunk>();
+
+        Debug.Assert(GetContainingLargeBlockPos(new Vector2I(0, 0)) == new Vector2I(0, 0));
+        Debug.Assert(GetContainingLargeBlockPos(new Vector2I(1, 0)) == new Vector2I(0, 0));
+        Debug.Assert(GetContainingLargeBlockPos(new Vector2I(2, 0)) == new Vector2I(2, 0));
+        Debug.Assert(GetContainingLargeBlockPos(new Vector2I(-1, 0)) == new Vector2I(-2, 0));
+        Debug.Assert(GetContainingLargeBlockPos(new Vector2I(-2, 0)) == new Vector2I(-2, 0));
+        Debug.Assert(GetContainingLargeBlockPos(new Vector2I(-3, 0)) == new Vector2I(-4, 0));
     }
 
     /// <summary>
@@ -27,11 +36,11 @@ public class Grid : MonoBehaviour {
     /// </summary>
     /// <param name="bigBlockPos"></param>
     /// <returns></returns>
-    private List<Block> GetLargeBlocksAtPos(Vector2I blockPos) {
+    private ReadOnlyCollection<Block> GetLargeBlocksAtPos(Vector2I blockPos) {
         Vector2I chunkPos = ConvertBlockPosToChunkPos(blockPos);
         GridChunk chunk;
         if(!largeChunks.TryGetValue(chunkPos, out chunk)) {
-            return new List<Block>();
+            return new List<Block>().AsReadOnly();
         }
 
         blockPos = blockPos - (chunkPos * BLOCKS_PER_CHUNK);
@@ -43,11 +52,11 @@ public class Grid : MonoBehaviour {
     /// </summary>
     /// <param name="bigBlockPos"></param>
     /// <returns></returns>
-    private List<Block> GetSmallBlocksAtPos(Vector2I blockPos) {
+    private ReadOnlyCollection<Block> GetSmallBlocksAtPos(Vector2I blockPos) {
         Vector2I chunkPos = ConvertBlockPosToChunkPos(blockPos);
         GridChunk chunk;
         if(!chunks.TryGetValue(chunkPos, out chunk)) {
-            return new List<Block>();
+            return new List<Block>().AsReadOnly();
         }
 
         blockPos = blockPos - (chunkPos * BLOCKS_PER_CHUNK);
@@ -84,11 +93,10 @@ public class Grid : MonoBehaviour {
     public List<Block> GetIntersectingBlocks(Vector2I blockPos) {
         Vector2I largePos = GetContainingLargeBlockPos(blockPos);
 
-        List<Block> bigBlocks = GetLargeBlocksAtPos(largePos);
-        List<Block> miniBlocks = GetSmallBlocksAtPos(blockPos);
+        ReadOnlyCollection<Block> bigBlocks = GetLargeBlocksAtPos(largePos);
+        ReadOnlyCollection<Block> miniBlocks = GetSmallBlocksAtPos(blockPos);
 
-        bigBlocks.AddRange(miniBlocks);
-        return bigBlocks;
+        return bigBlocks.Concat(miniBlocks).ToList();
     }
 
     public bool TryAddBlock(Block block, Vector2I bigBlockPos) {
@@ -131,6 +139,7 @@ public class Grid : MonoBehaviour {
         Vector3 chunkLocalSpace = ConvertChunkPosToLocalSpace(chunkPos);
         
         GridChunk chunk = Instantiate(chunkPrefab);
+        chunk.name = "Chunk " + chunkPos;
         chunk.transform.parent = transform;
         chunk.transform.localPosition = chunkLocalSpace;
         chunk.transform.localRotation = Quaternion.identity;
@@ -147,6 +156,7 @@ public class Grid : MonoBehaviour {
         Vector3 chunkLocalSpace = ConvertChunkPosToLocalSpace(chunkPos);
 
         GridChunk chunk = Instantiate(chunkPrefab);
+        chunk.name = "Large Chunk " + chunkPos;
         chunk.transform.parent = transform;
         chunk.transform.localPosition = chunkLocalSpace;
         chunk.transform.localRotation = Quaternion.identity;
@@ -189,7 +199,6 @@ public class Grid : MonoBehaviour {
     }
 
     public Vector2I ConvertLocalSpaceToBlockSpace(Vector2 localPos) {
-        localPos += new Vector2(UNITS_PER_BLOCK / 2f, UNITS_PER_BLOCK / 2f);
         Vector2I blockPos = Vector2I.Truncate(localPos / UNITS_PER_BLOCK);
 
         if(localPos.y < 0) {
@@ -208,10 +217,11 @@ public class Grid : MonoBehaviour {
     /// <param name="blockPos"></param>
     /// <returns>Center of the block</returns>
     public Vector2 ConvertBlockSpaceToLocalSpace(Vector2I blockPos) {
-        return blockPos * UNITS_PER_BLOCK;
+        return blockPos * UNITS_PER_BLOCK;       
     }
 
     private Vector2I GetContainingLargeBlockPos(Vector2I blockPos) {
-        return (blockPos / BLOCKS_PER_LARGE_BLOCK) * BLOCKS_PER_LARGE_BLOCK;
+        Vector2I result = (blockPos + new Vector2I(1000000, 1000000)) / BLOCKS_PER_UNIT;
+        return (result * BLOCKS_PER_LARGE_BLOCK) - new Vector2I(1000000, 1000000);
     }
 }
