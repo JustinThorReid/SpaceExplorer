@@ -7,7 +7,12 @@ public class Item : MonoBehaviour
 {
     private static float desiredSize = 0.5f;
 
-    public Block createsBlock;
+    [SerializeField]
+    private Block createsBlock;
+
+    public virtual Block CreatesBlock() {
+        return createsBlock;
+    }
 
     private void Awake() {
         Sprite sprite = GetComponent<SpriteRenderer>().sprite;
@@ -15,5 +20,9 @@ public class Item : MonoBehaviour
         float scale = (desiredSize / maxSize);
 
         transform.localScale = new Vector3(scale, scale, 1);
+    }
+
+    public virtual Sprite GetPreviewSprite(byte rotation) {
+        return this.createsBlock.GetSpriteForRotation(rotation);
     }
 }

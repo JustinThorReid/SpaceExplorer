@@ -29,7 +29,7 @@ public class GridChunk : MonoBehaviour
      * The block class is not user code and should contain logic for checking if allowed
      * Ideally there is some way of using a simple bool check for is present (maybe a common function like "not null")
      */
-    public bool AddBlock(Block block, Vector2I blockCoord) {
+    public bool AddBlock(Block block, Vector2I blockCoord, byte rotation) {
         Debug.Assert(blockCoord.x >= 0 && blockCoord.x < chunkSize);
         Debug.Assert(blockCoord.y >= 0 && blockCoord.y < chunkSize);
         Debug.Assert(block != null, "Can not add 'nothing' to grid space!");
@@ -38,6 +38,7 @@ public class GridChunk : MonoBehaviour
         placedBlock.transform.parent = transform;
         placedBlock.transform.localPosition = ConvertBlockSpaceToLocalSpace(blockCoord);
         placedBlock.transform.localRotation = Quaternion.identity;
+        placedBlock.Init(rotation);
 
         if(gridData[blockCoord.x, blockCoord.y] == null)
             gridData[blockCoord.x, blockCoord.y] = new List<Block>();

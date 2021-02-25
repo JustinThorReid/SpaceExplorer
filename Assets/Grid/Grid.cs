@@ -99,15 +99,15 @@ public class Grid : MonoBehaviour {
         return bigBlocks.Concat(miniBlocks).ToList();
     }
 
-    public bool TryAddBlock(Block block, Vector2I bigBlockPos) {
+    public bool TryAddBlock(Block block, Vector2I bigBlockPos, byte rotation) {
         if(!block.CanBePlacedIn(GetIntersectingBlocks(bigBlockPos))) {
             return false;
         }
 
-        return AddBlock(block, bigBlockPos);
+        return AddBlock(block, bigBlockPos, rotation);
     }
 
-    private bool AddBlock(Block block, Vector2I blockPos) {
+    private bool AddBlock(Block block, Vector2I blockPos, byte rotation) {
         Vector2I chunkPos = ConvertBlockPosToChunkPos(blockPos);
 
         if(block.isLarge) {
@@ -120,7 +120,7 @@ public class Grid : MonoBehaviour {
 
             // Get block pos local to the chunk
             blockPos = blockPos - (chunkPos * BLOCKS_PER_CHUNK);
-            return chunk.AddBlock(block, blockPos / BLOCKS_PER_LARGE_BLOCK);
+            return chunk.AddBlock(block, blockPos / BLOCKS_PER_LARGE_BLOCK, rotation);
         } else {
             GridChunk chunk;
             if(!chunks.TryGetValue(chunkPos, out chunk)) {
@@ -129,7 +129,7 @@ public class Grid : MonoBehaviour {
 
             // Get block pos local to the chunk
             blockPos = blockPos - (chunkPos * BLOCKS_PER_CHUNK);
-            return chunk.AddBlock(block, blockPos);
+            return chunk.AddBlock(block, blockPos, rotation);
         }
     }
 

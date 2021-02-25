@@ -100,3 +100,6 @@ MonoBehaviour:
   hasCollider: 1
   mass: 80
   isLarge: 1
+  spritesRotated:
+  - {fileID: -275982083047838338, guid: eb3ac984e1820534fa0de46e51fd4ec8, type: 3}
+  rotation: 0

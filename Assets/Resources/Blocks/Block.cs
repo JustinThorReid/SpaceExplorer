@@ -9,6 +9,14 @@ public class Block : MonoBehaviour {
     public float mass = 80;
     public bool isLarge = true;
 
+    public Sprite[] spritesRotated;
+    [HideInInspector]
+    public byte rotation = 0;
+
+    public void Init(byte rotation) {
+        this.rotation = rotation;
+    }
+
     public bool CanBePlacedIn(List<Block> column) {
         foreach(Block existing in column) {
             if(existing.layer == this.layer)
@@ -26,11 +34,18 @@ public class Block : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
+        Debug.Assert(spritesRotated.Length > 0, "Missing sprites");
+
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         sr.sortingOrder = (int)layer;
+        sr.sprite = GetSpriteForRotation(rotation);
 
         if(hasCollider) {
             BoxCollider2D collider = gameObject.AddComponent<BoxCollider2D>();
         }
+    }
+
+    public Sprite GetSpriteForRotation(byte rotation) {
+        return spritesRotated[rotation % spritesRotated.Length];
     }
 }

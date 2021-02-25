@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5340754977447046254}
   - component: {fileID: 5340754977447046255}
   - component: {fileID: 5340754977447046248}
-  - component: {fileID: 5340754977447046249}
+  - component: {fileID: -4323366286401885358}
   m_Layer: 0
   m_Name: ItemPipeStraight
   m_TagString: Untagged
@@ -123,7 +123,7 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.5
---- !u!114 &5340754977447046249
+--- !u!114 &-4323366286401885358
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -132,7 +132,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 5340754977447046250}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d0d06ddf4e32514eb021eee85359509, type: 3}
+  m_Script: {fileID: 11500000, guid: 79f507e11d5b3e04ab7b3cd38dd9be17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  createsBlock: {fileID: 3246615800608629902, guid: 466b0b7d1ec1b7a46a624a0ca0d71c30, type: 3}
+  createsBlock: {fileID: 0}
+  blocksInPack:
+  - {fileID: -1660247033406791341, guid: 466b0b7d1ec1b7a46a624a0ca0d71c30, type: 3}
+  - {fileID: 5335518648328154895, guid: db2731750b89ac74d98718fea1eb4c42, type: 3}
+  - {fileID: 9164875708786831966, guid: b86d8f96048ab3a4dbe8f25ca6dc431e, type: 3}
+  - {fileID: 495394719290452009, guid: b50486865cbddca40948a30ed4dae0ef, type: 3}
