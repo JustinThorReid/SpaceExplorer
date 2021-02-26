@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,7 +67,10 @@ public class PipeNetworkManager : MonoBehaviour
         } else {
             MergePipeNetworks(gridNetworks, connectedNetworks, location, pipeToAdd);
         }
+    }
 
+    public void RemovePipe(Grid grid, Vector2I location, BlockPipe pipeToRemove) {
+        throw new NotImplementedException("Must split networks when removing pipes");
     }
 
     private void AddConnectingPipe(PipeNetwork network, Vector2I location, BlockPipe pipe) {

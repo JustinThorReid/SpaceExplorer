@@ -23,6 +23,10 @@ public class BlockPipe : Block
         pipeNetworkManager.AddPipe(grid, gridBlockPos, this);
     }
 
+    public override void OnRemove(Grid grid, Vector2I gridBlockPos) {
+        pipeNetworkManager.RemovePipe(grid, gridBlockPos, this);
+    }
+
     public bool HasConnectionPoint(int direction) {
         // Rotate the direction into "block space" before checking
         switch(Vector2I.RotateDirection(direction, -rotation)) {

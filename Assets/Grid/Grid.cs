@@ -109,6 +109,63 @@ public class Grid : MonoBehaviour {
         return AddBlock(block, bigBlockPos, rotation);
     }
 
+    /// <summary>
+    /// Remove a block at blockPos. First remove small blocks then large blocks. For each column set remove upper layer items first.
+    /// TODO: Better logic around removing needed to make sure supports aren't removed before objects they support
+    /// TODO: Specific block to remove should be specified by pixel position
+    /// </summary>
+    /// <param name="blockPos"></param>
+    /// <returns></returns>
+    public Block TryRemoveBlock(Vector2I blockPos) {
+        Block removed = null;
+        IOrderedEnumerable<Block> blocks = GetSmallBlocksAtPos(blockPos).OrderByDescending(block => block.layer);
+        if(blocks.Count() > 0) {
+            removed = blocks.First();
+            RemoveBlock(removed, blockPos);
+        } else {
+            Vector2I largePos = GetContainingLargeBlockPos(blockPos);
+            IOrderedEnumerable<Block> bigBlocks = GetLargeBlocksAtPos(largePos).OrderByDescending(block => block.layer);
+            if(bigBlocks.Count() > 0) {
+                removed = bigBlocks.First();
+                RemoveLargeBlock(removed, largePos);
+            }
+        }
+
+        if(removed != null) {
+            removed.OnRemove(this, blockPos);
+        }
+
+        return removed;
+    }
+
+    /// Remove a small block from a location
+    private void RemoveBlock(Block block, Vector2I blockPos) {
+        Vector2I chunkPos = ConvertBlockPosToChunkPos(blockPos);
+        Debug.Assert(chunks.ContainsKey(chunkPos), "Remove block missing chunk");
+
+        GridChunk chunk;
+        if(!chunks.TryGetValue(chunkPos, out chunk)) {
+            return;
+        }
+
+        blockPos = blockPos - (chunkPos * BLOCKS_PER_CHUNK);
+        chunk.RemoveBlock(block, blockPos);
+    }
+
+    /// Remove a large block from a location
+    private void RemoveLargeBlock(Block block, Vector2I blockPos) {
+        Vector2I chunkPos = ConvertBlockPosToChunkPos(blockPos);
+        Debug.Assert(largeChunks.ContainsKey(chunkPos), "Remove block missing chunk");
+
+        GridChunk chunk;
+        if(!largeChunks.TryGetValue(chunkPos, out chunk)) {
+            return;
+        }
+
+        blockPos = (blockPos - (chunkPos * BLOCKS_PER_CHUNK)) / BLOCKS_PER_LARGE_BLOCK;
+        chunk.RemoveBlock(block, blockPos);
+    }
+
     private Block AddBlock(Block block, Vector2I blockPos, byte rotation) {
         Vector2I chunkPos = ConvertBlockPosToChunkPos(blockPos);
         Block placedBlock = null;

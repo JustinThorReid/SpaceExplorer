@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class Vector2I {
+public struct Vector2I {
     public static readonly Vector2I UP = new Vector2I(0, 1);
     public static readonly Vector2I RIGHT = new Vector2I(1, 0);
     public static readonly Vector2I DOWN = new Vector2I(0, -1);
@@ -26,9 +26,6 @@ public class Vector2I {
     public Vector2I(int x, int y) {
         this.x = x;
         this.y = y;
-    }
-
-    public Vector2I() {
     }
 
     public Vector2I(Vector2 v) {

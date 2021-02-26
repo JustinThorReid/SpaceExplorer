@@ -51,6 +51,7 @@ MonoBehaviour:
   spritesRotated:
   - {fileID: 3054439076135632626, guid: eb3ac984e1820534fa0de46e51fd4ec8, type: 3}
   rotation: 0
+  createsItem: {fileID: 2522810675936992772, guid: 2beb25778d2d0a040ada4a066a2e4e1b, type: 3}
 --- !u!212 &1888739061181853166
 SpriteRenderer:
   m_ObjectHideFlags: 0

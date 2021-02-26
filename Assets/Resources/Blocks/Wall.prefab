@@ -103,3 +103,4 @@ MonoBehaviour:
   spritesRotated:
   - {fileID: -275982083047838338, guid: eb3ac984e1820534fa0de46e51fd4ec8, type: 3}
   rotation: 0
+  createsItem: {fileID: 4474313841727282248, guid: cb19daeae5ea18b4fa1e4c9804a7ace0, type: 3}

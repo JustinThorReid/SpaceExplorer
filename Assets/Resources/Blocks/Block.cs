@@ -12,6 +12,7 @@ public class Block : MonoBehaviour {
     public Sprite[] spritesRotated;
     [HideInInspector]
     public byte rotation = 0;
+    public Item createsItem;
 
     public void Init(byte rotation) {
         this.rotation = rotation;
@@ -50,5 +51,7 @@ public class Block : MonoBehaviour {
     }
 
     public virtual void OnPlace(Grid grid, Vector2I blockPos) {
+    }
+    public virtual void OnRemove(Grid grid, Vector2I blockPos) {
     }
 }

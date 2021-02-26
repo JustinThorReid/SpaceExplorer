@@ -47,6 +47,17 @@ public class GridChunk : MonoBehaviour
         return placedBlock;
     }
 
+    public void RemoveBlock(Block block, Vector2I blockCoord) {
+        Debug.Assert(blockCoord.x >= 0 && blockCoord.x < chunkSize);
+        Debug.Assert(blockCoord.y >= 0 && blockCoord.y < chunkSize);
+        Debug.Assert(block != null, "Can not add 'nothing' to grid space!");
+        Debug.Assert(gridData[blockCoord.x, blockCoord.y] != null, "Column at position during block remove is null");
+        Debug.Assert(gridData[blockCoord.x, blockCoord.y].Contains(block), "Column at position during block remove does not contain block");
+
+        gridData[blockCoord.x, blockCoord.y].Remove(block);
+        Destroy(block.gameObject);
+    }
+
     public ReadOnlyCollection<Block> GetBlockColumn(Vector2I blockCoord) {
         Debug.Assert(blockCoord.x >= 0 && blockCoord.x < chunkSize);
         Debug.Assert(blockCoord.y >= 0 && blockCoord.y < chunkSize);

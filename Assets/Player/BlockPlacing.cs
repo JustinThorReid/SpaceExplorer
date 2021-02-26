@@ -76,6 +76,12 @@ public class BlockPlacing : MonoBehaviour
         if(Input.GetButtonUp("Fire1")) {
             grid.TryAddBlock(CreateBlockInstance(selectedItem), blockPos, rotation);
         }
+        if(Input.GetButtonUp("Fire2")) {
+            //TODO: A game manager that controls both grids and items should be responsible for spawning items/blocks
+            Block removedBlock = grid.TryRemoveBlock(blockPos);
+            Item spawnedItem = Instantiate(removedBlock.createsItem);
+            spawnedItem.transform.position = grid.ConvertBlockSpaceToWorldSpace(blockPos);
+        }
     }
 
     private Block CreateBlockInstance(int type) {

@@ -106,6 +106,7 @@ MonoBehaviour:
   - {fileID: -7524521870618806978, guid: 47d18b47a59846e439569aaaa3e8c06e, type: 3}
   - {fileID: -6624953910322571867, guid: 47d18b47a59846e439569aaaa3e8c06e, type: 3}
   rotation: 0
+  createsItem: {fileID: -4323366286401885358, guid: 9d7b4b59357e1814e8c5d44da6121c6a, type: 3}
   pipeConnectionTop: 0
   pipeConnectionRight: 1
   pipeConnectionLeft: 0
