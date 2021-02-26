@@ -14,6 +14,15 @@ public class PipeNetwork
         pipeBlocks.Add(location, pipe);
     }
 
+    public PipeNetwork(int networkID, IEnumerable<(Vector2I, BlockPipe)> pipes) {
+        Debug.Assert(pipes.Count() > 0, "Attemping to create pipe network without any pipes");
+
+        this.networkID = networkID;
+        foreach(var tuple in pipes) {
+            pipeBlocks.Add(tuple.Item1, tuple.Item2);
+        }
+    }
+
     public void AddConnectingPipe(Vector2I location, BlockPipe pipe) {
         Debug.Assert(ConnectedNeighbors(location, pipe).Count > 0, "Adding connected pipe that does not have connections");
 
@@ -41,6 +50,22 @@ public class PipeNetwork
         return result;
     } 
 
+    public List<(Vector2I, BlockPipe)> ConnectedNeighbors(Vector2I location) {
+        BlockPipe pipe = GetBlockPipe(location);
+
+        if(pipe == null) {
+            return new List<(Vector2I, BlockPipe)>(0);
+        }
+
+        return ConnectedNeighbors(location, pipe);
+    }
+
+    public BlockPipe GetBlockPipe(Vector2I location) {
+        BlockPipe pipe = null;
+        pipeBlocks.TryGetValue(location, out pipe);
+        return pipe;
+    }
+
     /// <summary>
     /// True if there is a pipe at location with a connected socket in direction
     /// </summary>
@@ -62,6 +87,44 @@ public class PipeNetwork
     }
 
     public void AddPipeNetwork(PipeNetwork other) {
-        other.pipeBlocks.ToList().ForEach(x => this.pipeBlocks.Add(x.Key, x.Value));
+        other.pipeBlocks.ToList().ForEach(x => {
+            this.pipeBlocks.Add(x.Key, x.Value);
+            other.RemovePipe(x.Key);
+        });
+    }
+
+    public void RemovePipe(Vector2I location) {
+        Debug.Assert(pipeBlocks.ContainsKey(location), "RemovePipe: Network has no pipe at location");
+        pipeBlocks.Remove(location);
+    }
+
+    public void RemovePipes(IEnumerable<(Vector2I, BlockPipe)> pipes) {
+        foreach(var tuple in pipes) {
+            RemovePipe(tuple.Item1);
+        }
+    }
+
+    public HashSet<(Vector2I, BlockPipe)> GetConnectedChain(Vector2I startLocation) {
+        Debug.Assert(pipeBlocks.ContainsKey(startLocation), "Attempting to get connected pipe chain for an invalid start location");
+
+        HashSet<(Vector2I, BlockPipe)> foundLocations = new HashSet<(Vector2I, BlockPipe)>();
+        HashSet<(Vector2I, BlockPipe)> checkLocations = new HashSet<(Vector2I, BlockPipe)>();
+        checkLocations.Add((startLocation, GetBlockPipe(startLocation)));
+
+        while(checkLocations.Count > 0) {
+            (Vector2I checkLocation, BlockPipe checkPipe) = checkLocations.First();
+            List<(Vector2I, BlockPipe)> testConnections = ConnectedNeighbors(checkLocation);
+
+            foreach(var tuple in testConnections) {
+                if(!foundLocations.Contains(tuple) && !checkLocations.Contains(tuple)) {
+                    checkLocations.Add(tuple);
+                }
+            }
+
+            checkLocations.Remove((checkLocation, checkPipe));
+            foundLocations.Add((checkLocation, checkPipe));
+        }
+
+        return foundLocations;
     }
 }
