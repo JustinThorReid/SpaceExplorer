@@ -18,4 +18,25 @@ public class BlockPipe : Block
         if(pipeNetworkManager == null)
             pipeNetworkManager = FindObjectOfType<PipeNetworkManager>();
     }
+
+    public override void OnPlace(Grid grid, Vector2I gridBlockPos) {
+        pipeNetworkManager.AddPipe(grid, gridBlockPos, this);
+    }
+
+    public bool HasConnectionPoint(int direction) {
+        // Rotate the direction into "block space" before checking
+        switch(Vector2I.RotateDirection(direction, -rotation)) {
+            case 0:
+                return pipeConnectionTop;
+            case 1:
+                return pipeConnectionRight;
+            case 2:
+                return pipeConnectionBottom;
+            case 3:
+                return pipeConnectionLeft;
+            default:
+                Debug.Assert(false, "Unhandled direction");
+                return false;
+        }
+    }
 }

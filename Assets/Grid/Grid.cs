@@ -14,6 +14,8 @@ public class Grid : MonoBehaviour {
     public static readonly float UNITS_PER_BLOCK = 1 / (float)BLOCKS_PER_UNIT;
     public static readonly float UNITS_PER_BLOCK_LARGE = UNITS_PER_BLOCK * BLOCKS_PER_LARGE_BLOCK;
 
+    public static readonly Vector2 BLOCK_OFFSET = new Vector2(UNITS_PER_BLOCK / 2f, UNITS_PER_BLOCK / 2f);
+
     public GridChunk chunkPrefab;
 
     private Dictionary<Vector2I, GridChunk> chunks;
@@ -99,16 +101,17 @@ public class Grid : MonoBehaviour {
         return bigBlocks.Concat(miniBlocks).ToList();
     }
 
-    public bool TryAddBlock(Block block, Vector2I bigBlockPos, byte rotation) {
+    public Block TryAddBlock(Block block, Vector2I bigBlockPos, byte rotation) {
         if(!block.CanBePlacedIn(GetIntersectingBlocks(bigBlockPos))) {
-            return false;
+            return null;
         }
 
         return AddBlock(block, bigBlockPos, rotation);
     }
 
-    private bool AddBlock(Block block, Vector2I blockPos, byte rotation) {
+    private Block AddBlock(Block block, Vector2I blockPos, byte rotation) {
         Vector2I chunkPos = ConvertBlockPosToChunkPos(blockPos);
+        Block placedBlock = null;
 
         if(block.isLarge) {
             Debug.Assert(blockPos.x % BLOCKS_PER_LARGE_BLOCK == 0, "Expected large block position not a multiple of large block size");
@@ -119,8 +122,8 @@ public class Grid : MonoBehaviour {
             }
 
             // Get block pos local to the chunk
-            blockPos = blockPos - (chunkPos * BLOCKS_PER_CHUNK);
-            return chunk.AddBlock(block, blockPos / BLOCKS_PER_LARGE_BLOCK, rotation);
+            Vector2I chunkBlockPos = (blockPos - (chunkPos * BLOCKS_PER_CHUNK)) / BLOCKS_PER_LARGE_BLOCK;
+            placedBlock = chunk.AddBlock(block, chunkBlockPos, rotation);
         } else {
             GridChunk chunk;
             if(!chunks.TryGetValue(chunkPos, out chunk)) {
@@ -128,9 +131,15 @@ public class Grid : MonoBehaviour {
             }
 
             // Get block pos local to the chunk
-            blockPos = blockPos - (chunkPos * BLOCKS_PER_CHUNK);
-            return chunk.AddBlock(block, blockPos, rotation);
+            Vector2I chunkBlockPos = blockPos - (chunkPos * BLOCKS_PER_CHUNK);
+            placedBlock = chunk.AddBlock(block, chunkBlockPos, rotation);
         }
+
+        if(placedBlock != null) {
+            placedBlock.OnPlace(this, blockPos);
+        }
+
+        return placedBlock;
     }
 
     private GridChunk CreateNewChunk(Vector2I chunkPos) {

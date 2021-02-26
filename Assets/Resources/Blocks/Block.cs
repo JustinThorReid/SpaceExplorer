@@ -48,4 +48,7 @@ public class Block : MonoBehaviour {
     public Sprite GetSpriteForRotation(byte rotation) {
         return spritesRotated[rotation % spritesRotated.Length];
     }
+
+    public virtual void OnPlace(Grid grid, Vector2I blockPos) {
+    }
 }

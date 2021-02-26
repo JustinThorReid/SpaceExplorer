@@ -5,6 +5,17 @@ using System.Text;
 using UnityEngine;
 
 public class Vector2I {
+    public static readonly Vector2I UP = new Vector2I(0, 1);
+    public static readonly Vector2I RIGHT = new Vector2I(1, 0);
+    public static readonly Vector2I DOWN = new Vector2I(0, -1);
+    public static readonly Vector2I LEFT = new Vector2I(-1, 0);
+    public static readonly Vector2I[] DIRECTIONS = { UP, RIGHT, DOWN, LEFT };
+
+    public static int RotateDirection(int dir, int amount) {
+        dir += amount;
+        return ((dir % 4) + 4) % 4; // Because of negative 
+    }
+
     public int x, y;
 
     public Vector2I(Vector2I other) {
