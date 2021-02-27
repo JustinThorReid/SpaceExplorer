@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using UnityEditor;
 using UnityEngine;
 
 public class GridChunk : MonoBehaviour 
@@ -29,33 +30,31 @@ public class GridChunk : MonoBehaviour
      * The block class is not user code and should contain logic for checking if allowed
      * Ideally there is some way of using a simple bool check for is present (maybe a common function like "not null")
      */
-    public Block AddBlock(Block block, Vector2I blockCoord, byte rotation) {
+    public void AddBlock(Block blockInstance, Vector2I blockCoord, byte rotation) {
+        Debug.Assert(blockInstance.gameObject.scene != null, "Attemping to add prefab original to grid");
         Debug.Assert(blockCoord.x >= 0 && blockCoord.x < chunkSize);
         Debug.Assert(blockCoord.y >= 0 && blockCoord.y < chunkSize);
-        Debug.Assert(block != null, "Can not add 'nothing' to grid space!");
+        Debug.Assert(blockInstance != null, "Can not add 'nothing' to grid space!");
 
-        Block placedBlock = Instantiate(block);
-        placedBlock.transform.parent = transform;
-        placedBlock.transform.localPosition = ConvertBlockSpaceToLocalSpace(blockCoord);
-        placedBlock.transform.localRotation = Quaternion.identity;
-        placedBlock.Init(rotation);
+        blockInstance.transform.parent = transform;
+        blockInstance.transform.localPosition = ConvertBlockSpaceToLocalSpace(blockCoord);
+        blockInstance.transform.localRotation = Quaternion.identity;
+        blockInstance.Init(rotation);
 
         if(gridData[blockCoord.x, blockCoord.y] == null)
             gridData[blockCoord.x, blockCoord.y] = new List<Block>();
-        gridData[blockCoord.x, blockCoord.y].Add(placedBlock);
-
-        return placedBlock;
+        gridData[blockCoord.x, blockCoord.y].Add(blockInstance);
     }
 
-    public void RemoveBlock(Block block, Vector2I blockCoord) {
+    public void RemoveBlock(Block blockInstance, Vector2I blockCoord) {
+        Debug.Assert(blockInstance.gameObject.scene != null, "Attemping to remove prefab original from grid");
         Debug.Assert(blockCoord.x >= 0 && blockCoord.x < chunkSize);
         Debug.Assert(blockCoord.y >= 0 && blockCoord.y < chunkSize);
-        Debug.Assert(block != null, "Can not add 'nothing' to grid space!");
+        Debug.Assert(blockInstance != null, "Can not add 'nothing' to grid space!");
         Debug.Assert(gridData[blockCoord.x, blockCoord.y] != null, "Column at position during block remove is null");
-        Debug.Assert(gridData[blockCoord.x, blockCoord.y].Contains(block), "Column at position during block remove does not contain block");
+        Debug.Assert(gridData[blockCoord.x, blockCoord.y].Contains(blockInstance), "Column at position during block remove does not contain block");
 
-        gridData[blockCoord.x, blockCoord.y].Remove(block);
-        Destroy(block.gameObject);
+        gridData[blockCoord.x, blockCoord.y].Remove(blockInstance);
     }
 
     public ReadOnlyCollection<Block> GetBlockColumn(Vector2I blockCoord) {

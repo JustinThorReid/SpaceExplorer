@@ -8,6 +8,7 @@ public class Block : MonoBehaviour {
     public bool hasCollider = true;
     public float mass = 80;
     public bool isLarge = true;
+    public Vector2I size = Vector2I.ONE;
 
     public Sprite[] spritesRotated;
     [HideInInspector]

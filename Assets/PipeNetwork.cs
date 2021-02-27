@@ -1,17 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 public class PipeNetwork
 {
     private Dictionary<Vector2I, BlockPipe> pipeBlocks = new Dictionary<Vector2I, BlockPipe>();
+
     public IReadOnlyDictionary<Vector2I, BlockPipe> pipes => pipeBlocks;
+
     public readonly int networkID;
 
     public PipeNetwork(int networkID, Vector2I location, BlockPipe pipe) {
         this.networkID = networkID;
         pipeBlocks.Add(location, pipe);
+
     }
 
     public PipeNetwork(int networkID, IEnumerable<(Vector2I, BlockPipe)> pipes) {

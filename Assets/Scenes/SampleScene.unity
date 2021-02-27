@@ -301,6 +301,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   allItems: []
+  allBlocks: []
 --- !u!4 &959097552
 Transform:
   m_ObjectHideFlags: 0
@@ -327,6 +328,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e23ddb21d492134baffa8afc5ff0bae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  showDebug: 1
 --- !u!1 &1586326188
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
+[System.Serializable]
 public struct Vector2I {
     public static readonly Vector2I UP = new Vector2I(0, 1);
     public static readonly Vector2I RIGHT = new Vector2I(1, 0);
     public static readonly Vector2I DOWN = new Vector2I(0, -1);
     public static readonly Vector2I LEFT = new Vector2I(-1, 0);
     public static readonly Vector2I[] DIRECTIONS = { UP, RIGHT, DOWN, LEFT };
+
+    public static readonly Vector2I ONE = new Vector2I(1, 1);
 
     public static int RotateDirection(int dir, int amount) {
         dir += amount;
@@ -38,6 +38,40 @@ public struct Vector2I {
     }
     public static Vector2I Truncate(Vector2 v) {
         return new Vector2I((int)v.x, (int)v.y);
+    }
+
+    /// <summary>
+    /// Rotate this vector by a multiple of 90 degrees negavtive or positive
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <returns></returns>
+    public void Rotate(int amount) {
+        amount = ((amount % 4) + 4) % 4;
+
+        switch(amount) {
+            case 0:
+                return;
+            case 1:
+                int t = x;
+                x = y;
+                y = -t;
+                return;
+            case 2:
+                x = -x;
+                y = -y;
+                return;
+            case 3:
+                int t2 = x;
+                x = -y;
+                y = t2;
+                return;
+        }
+    }
+
+    public Vector2I Rotated(int amount) {
+        Vector2I result = new Vector2I(this);
+        result.Rotate(amount);
+        return result;
     }
 
     public static Vector2I operator +(Vector2I a, Vector2I b) {
