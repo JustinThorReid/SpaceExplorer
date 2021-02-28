@@ -9,22 +9,17 @@ public class Grid : MonoBehaviour {
     public static readonly uint BLOCKS_PER_UNIT = 2;
     public static readonly uint BLOCKS_PER_LARGE_BLOCK = 2;
 
-    public static readonly uint BLOCKS_PER_CHUNK = 40;
-    public static readonly uint BLOCKS_PER_CHUNK_LARGE = BLOCKS_PER_CHUNK / BLOCKS_PER_LARGE_BLOCK;
-
     public static readonly float UNITS_PER_BLOCK = 1 / (float)BLOCKS_PER_UNIT;
     public static readonly float UNITS_PER_BLOCK_LARGE = UNITS_PER_BLOCK * BLOCKS_PER_LARGE_BLOCK;
 
     public static readonly Vector2 BLOCK_OFFSET = new Vector2(UNITS_PER_BLOCK / 2f, UNITS_PER_BLOCK / 2f);
 
-    public GridChunk chunkPrefab;
-
-    private Dictionary<Vector2I, GridChunk> chunks;
-    private Dictionary<Vector2I, GridChunk> largeChunks;
+    private Dictionary<Vector2I, List<Block>> blockData;
+    private Dictionary<Vector2I, List<Block>> largeBlockData;
 
     void Start() {
-        chunks = new Dictionary<Vector2I, GridChunk>();
-        largeChunks = new Dictionary<Vector2I, GridChunk>();
+        blockData = new Dictionary<Vector2I, List<Block>>();
+        largeBlockData = new Dictionary<Vector2I, List<Block>>();
 
         Debug.Assert(GetContainingLargeBlockPos(new Vector2I(0, 0)) == new Vector2I(0, 0));
         Debug.Assert(GetContainingLargeBlockPos(new Vector2I(1, 0)) == new Vector2I(0, 0));
@@ -40,14 +35,13 @@ public class Grid : MonoBehaviour {
     /// <param name="bigBlockPos"></param>
     /// <returns></returns>
     private ReadOnlyCollection<Block> GetLargeBlocksAtPos(Vector2I blockPos) {
-        Vector2I chunkPos = ConvertBlockPosToChunkPos(blockPos);
-        GridChunk chunk;
-        if(!largeChunks.TryGetValue(chunkPos, out chunk)) {
+        Vector2I largeBlockPos = GetContainingLargeBlockPos(blockPos);
+        List<Block> blocks;
+        if(!largeBlockData.TryGetValue(largeBlockPos, out blocks)) {
             return new List<Block>().AsReadOnly();
         }
 
-        blockPos = blockPos - (chunkPos * BLOCKS_PER_CHUNK);
-        return chunk.GetBlockColumn(blockPos / BLOCKS_PER_LARGE_BLOCK);
+        return blocks.AsReadOnly();
     }
 
     /// <summary>
@@ -56,14 +50,12 @@ public class Grid : MonoBehaviour {
     /// <param name="bigBlockPos"></param>
     /// <returns></returns>
     private ReadOnlyCollection<Block> GetSmallBlocksAtPos(Vector2I blockPos) {
-        Vector2I chunkPos = ConvertBlockPosToChunkPos(blockPos);
-        GridChunk chunk;
-        if(!chunks.TryGetValue(chunkPos, out chunk)) {
+        List<Block> blocks;
+        if(!blockData.TryGetValue(blockPos, out blocks)) {
             return new List<Block>().AsReadOnly();
         }
 
-        blockPos = blockPos - (chunkPos * BLOCKS_PER_CHUNK);
-        return chunk.GetBlockColumn(blockPos);
+        return blocks.AsReadOnly();
     }
 
     /// <summary>
@@ -78,15 +70,7 @@ public class Grid : MonoBehaviour {
         for(int x = blockPos.x; x < BLOCKS_PER_LARGE_BLOCK + blockPos.x; x++) {
             for(int y = blockPos.y; y < BLOCKS_PER_LARGE_BLOCK + blockPos.y; y++) {
                 Vector2I thisBlockPos = new Vector2I(x, y);
-                Vector2I chunkPos = ConvertBlockPosToChunkPos(thisBlockPos);
-
-                GridChunk chunk;
-                if(!chunks.TryGetValue(chunkPos, out chunk)) {
-                    continue;
-                }
-
-                thisBlockPos = thisBlockPos - (chunkPos * BLOCKS_PER_CHUNK);
-                miniBlocks.AddRange(chunk.GetBlockColumn(thisBlockPos));
+                miniBlocks.AddRange(GetSmallBlocksAtPos(thisBlockPos));
             }
         }
 
@@ -103,9 +87,9 @@ public class Grid : MonoBehaviour {
     }
 
     public Block TryAddBlock(Block block, Vector2I blockPos, byte rotation) {
-        Debug.Assert(block.gameObject.scene == null, "Attemping to add prefab instance to grid, expecting a prefab original");
+        Debug.Assert(block.gameObject.scene.rootCount == 0, "Attemping to add prefab instance to grid, expecting a prefab original");
 
-        Vector2I placedSize = block.size.Rotated(rotation);
+        Vector2I placedSize = block.isLarge ? block.PlacedSize(rotation) * BLOCKS_PER_LARGE_BLOCK : block.PlacedSize(rotation);
         Vector2I testPos = new Vector2I();
         for(testPos.x = blockPos.x; testPos.x < blockPos.x + placedSize.x; testPos.x++) {
             for(testPos.y = blockPos.y; testPos.y < blockPos.y + placedSize.y; testPos.y++) {
@@ -130,13 +114,13 @@ public class Grid : MonoBehaviour {
         IOrderedEnumerable<Block> blocks = GetSmallBlocksAtPos(blockPos).OrderByDescending(block => block.layer);
         if(blocks.Count() > 0) {
             removed = blocks.First();
-            RemoveBlock(removed, blockPos);
+            RemoveBlock(removed);
         } else {
             Vector2I largePos = GetContainingLargeBlockPos(blockPos);
             IOrderedEnumerable<Block> bigBlocks = GetLargeBlocksAtPos(largePos).OrderByDescending(block => block.layer);
             if(bigBlocks.Count() > 0) {
                 removed = bigBlocks.First();
-                RemoveBlock(removed, largePos);
+                RemoveBlock(removed);
             }
         }
 
@@ -148,124 +132,93 @@ public class Grid : MonoBehaviour {
     }
 
     /// Remove a block from a location
-    private void RemoveBlock(Block blockInstance, Vector2I blockPos) {
-        Vector2I chunkPos = ConvertBlockPosToChunkPos(blockPos);
-        GridChunk chunk;
-        Debug.Assert(blockInstance.gameObject.scene != null, "Attemping to remove prefab original from grid");
+    private void RemoveBlock(Block blockInstance) {
+        Debug.Assert(blockInstance.gameObject.scene.rootCount != 0, "Attemping to remove prefab original from grid");
 
+        Vector2I blockPos = blockInstance.blockPos;
+        Vector2I placedSize = blockInstance.PlacedSize(blockInstance.rotation);
+        Vector2I placePos = new Vector2I();
         if(blockInstance.isLarge) {
+            placedSize *= BLOCKS_PER_LARGE_BLOCK;
             Debug.Assert(blockPos.x % BLOCKS_PER_LARGE_BLOCK == 0, "Expected large block position is not a multiple of large block size");
 
-            if(!largeChunks.TryGetValue(chunkPos, out chunk)) {
-                throw new System.Exception("Chunk does not exist during block remove");
+            for(placePos.x = blockPos.x; placePos.x < blockPos.x + placedSize.x; placePos.x += (int)BLOCKS_PER_LARGE_BLOCK) {
+                for(placePos.y = blockPos.y; placePos.y < blockPos.y + placedSize.y; placePos.y += (int)BLOCKS_PER_LARGE_BLOCK) {
+                    removeData(largeBlockData, placePos, blockInstance);
+                }
             }
-
-            blockPos = (blockPos - (chunkPos * BLOCKS_PER_CHUNK)) / BLOCKS_PER_LARGE_BLOCK;
         } else {
-            if(!chunks.TryGetValue(chunkPos, out chunk)) {
-                throw new System.Exception("Chunk does not exist during block remove");
+            for(placePos.x = blockPos.x; placePos.x < blockPos.x + placedSize.x; placePos.x++) {
+                for(placePos.y = blockPos.y; placePos.y < blockPos.y + placedSize.y; placePos.y++) {
+                    removeData(blockData, placePos, blockInstance);
+                }
             }
-
-            blockPos = blockPos - (chunkPos * BLOCKS_PER_CHUNK);
         }
 
-        chunk.RemoveBlock(blockInstance, blockPos);
         Destroy(blockInstance.gameObject);
     }
 
-    private Block AddBlock(Block block, Vector2I blockPos, byte rotation) {
-        Vector2I chunkPos = ConvertBlockPosToChunkPos(blockPos);
-        Block placedBlock = Instantiate(block);
-
-        Vector2I placedSize = block.size.Rotated(rotation);
-        Vector2I placePos = new Vector2I();
-        if(block.isLarge) {
-            placedSize *= BLOCKS_PER_LARGE_BLOCK;
-            for(placePos.x = blockPos.x; placePos.x < blockPos.x + placedSize.x; placePos.x += (int)BLOCKS_PER_LARGE_BLOCK) {
-                for(placePos.y = blockPos.y; placePos.y < blockPos.y + placedSize.y; placePos.y += (int)BLOCKS_PER_LARGE_BLOCK) {
-                    Debug.Assert(placePos.x % BLOCKS_PER_LARGE_BLOCK == 0, "Expected large block position is not a multiple of large block size");
-
-                    GridChunk chunk;
-                    if(!largeChunks.TryGetValue(chunkPos, out chunk)) {
-                        chunk = CreateNewLargeChunk(chunkPos);
-                    }
-
-                    // Get block pos local to the chunk
-                    Vector2I chunkBlockPos = (placePos - (chunkPos * BLOCKS_PER_CHUNK)) / BLOCKS_PER_LARGE_BLOCK;
-                    chunk.AddBlock(placedBlock, chunkBlockPos, rotation);
-                }
-            }
-        } else {
-
-            for(placePos.x = blockPos.x; placePos.x < blockPos.x + placedSize.x; placePos.x++) {
-                for(placePos.y = blockPos.y; placePos.y < blockPos.y + placedSize.y; placePos.y++) {
-                    GridChunk chunk;
-                    if(!chunks.TryGetValue(chunkPos, out chunk)) {
-                        chunk = CreateNewChunk(chunkPos);
-                    }
-
-                    // Get block pos local to the chunk
-                    Vector2I chunkBlockPos = placePos - (chunkPos * BLOCKS_PER_CHUNK);
-                    chunk.AddBlock(placedBlock, chunkBlockPos, rotation);
-                }
-            }
+    private void setData(Dictionary<Vector2I, List<Block>> dict, Vector2I pos, Block block) {
+        List<Block> column = null;
+        if(!dict.TryGetValue(pos, out column)) {
+            column = new List<Block>(3);
+            dict.Add(pos, column);
         }
 
-        placedBlock.OnPlace(this, blockPos);
-        return placedBlock;
+        column.Add(block);
     }
 
-    private GridChunk CreateNewChunk(Vector2I chunkPos) {
-        Debug.Assert(!chunks.ContainsKey(chunkPos));
+    private void removeData(Dictionary<Vector2I, List<Block>> dict, Vector2I pos, Block block) {
+        Debug.Assert(dict.ContainsKey(pos), "Attempting to remove data from dict that does not contain key");
 
-        Vector3 chunkLocalSpace = ConvertChunkPosToLocalSpace(chunkPos);
-        
-        GridChunk chunk = Instantiate(chunkPrefab);
-        chunk.name = "Chunk " + chunkPos;
-        chunk.transform.parent = transform;
-        chunk.transform.localPosition = chunkLocalSpace;
-        chunk.transform.localRotation = Quaternion.identity;
-        chunk.Init(BLOCKS_PER_CHUNK, UNITS_PER_BLOCK);
-        chunks.Add(chunkPos, chunk);
-
-        return chunk;
-    }
-
-    private GridChunk CreateNewLargeChunk(Vector2I chunkPos)
-    {
-        Debug.Assert(!largeChunks.ContainsKey(chunkPos));
-
-        Vector3 chunkLocalSpace = ConvertChunkPosToLocalSpace(chunkPos);
-
-        GridChunk chunk = Instantiate(chunkPrefab);
-        chunk.name = "Large Chunk " + chunkPos;
-        chunk.transform.parent = transform;
-        chunk.transform.localPosition = chunkLocalSpace;
-        chunk.transform.localRotation = Quaternion.identity;
-        chunk.Init(BLOCKS_PER_CHUNK_LARGE, UNITS_PER_BLOCK_LARGE);
-        largeChunks.Add(chunkPos, chunk);
-
-        return chunk;
-    }
-
-    private Vector2 ConvertChunkPosToLocalSpace(Vector2I chunkPos) {
-        return chunkPos * BLOCKS_PER_CHUNK * UNITS_PER_BLOCK;
+        List<Block> column = null;
+        if(dict.TryGetValue(pos, out column)) {
+            column.Remove(block);
+        }
     }
 
     /// <summary>
-    /// Gets the chunk pos that would contain this block
+    /// blockPos and size are expected in small/regular size
     /// </summary>
+    /// <param name="blockInstance"></param>
     /// <param name="blockPos"></param>
-    /// <returns></returns>
-    private Vector2I ConvertBlockPosToChunkPos(Vector2I blockPos) {
-        Vector2I chunkPos = blockPos / BLOCKS_PER_CHUNK;
+    /// <param name="size"></param>
+    private void positionBlock(Block blockInstance, Vector2I blockPos, Vector2I size) {
+        Vector2 position = blockPos + size * 0.5f;
 
-        if(blockPos.x < 0)
-            chunkPos.x = (blockPos.x + 1) / (int)BLOCKS_PER_CHUNK - 1;
-        if(blockPos.y < 0)
-            chunkPos.y = (blockPos.y + 1) / (int)BLOCKS_PER_CHUNK - 1;
+        blockInstance.transform.parent = transform;
+        blockInstance.transform.localPosition = position * UNITS_PER_BLOCK;
+    }
 
-        return chunkPos;
+    private Block AddBlock(Block block, Vector2I blockPos, byte rotation) {
+        Block placedBlock = Instantiate(block);
+
+        Vector2I placedSize = block.PlacedSize(rotation);
+        Vector2I placePos = new Vector2I();
+        if(placedBlock.isLarge) {
+            placedSize *= BLOCKS_PER_LARGE_BLOCK;
+            Debug.Assert(blockPos.x % BLOCKS_PER_LARGE_BLOCK == 0, "Expected large block position is not a multiple of large block size");
+
+            for(placePos.x = blockPos.x; placePos.x < blockPos.x + placedSize.x; placePos.x += (int)BLOCKS_PER_LARGE_BLOCK) {
+                for(placePos.y = blockPos.y; placePos.y < blockPos.y + placedSize.y; placePos.y += (int)BLOCKS_PER_LARGE_BLOCK) {
+                    setData(largeBlockData, placePos, placedBlock);
+                }
+            }
+
+            positionBlock(placedBlock, blockPos, placedSize);
+        } else {
+            for(placePos.x = blockPos.x; placePos.x < blockPos.x + placedSize.x; placePos.x++) {
+                for(placePos.y = blockPos.y; placePos.y < blockPos.y + placedSize.y; placePos.y++) {
+                    setData(blockData, placePos, placedBlock);
+                }
+            }
+
+            positionBlock(placedBlock, blockPos, placedSize);
+        }
+
+        placedBlock.Init(rotation);
+        placedBlock.OnPlace(this, blockPos);
+        return placedBlock;
     }
 
     public Vector2I ConvertWorldSpaceToBlockSpace(Vector3 worldPos) {
@@ -303,6 +256,9 @@ public class Grid : MonoBehaviour {
     }
 
     private Vector2I GetContainingLargeBlockPos(Vector2I blockPos) {
+        Debug.Assert(blockPos.x > -1000000, "Block position too low for negative rounding");
+        Debug.Assert(blockPos.y > -1000000, "Block position too low for negative rounding");
+
         Vector2I result = (blockPos + new Vector2I(1000000, 1000000)) / BLOCKS_PER_UNIT;
         return (result * BLOCKS_PER_LARGE_BLOCK) - new Vector2I(1000000, 1000000);
     }
