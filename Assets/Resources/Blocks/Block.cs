@@ -10,6 +10,24 @@ public class Block : MonoBehaviour {
     public bool isLarge = true;
     public Vector2I size = Vector2I.ONE;
 
+    [HideInInspector]
+    public Vector2I blockPos;
+
+    public Vector2I PlacedSize(int rotation) {
+        Vector2I placedSize = size.Rotated(rotation);
+        placedSize.x = Mathf.Abs(placedSize.x);
+        placedSize.y = Mathf.Abs(placedSize.y);
+
+        return placedSize;
+    }
+
+    public Vector2I PlacedSizeSmall(int rotation) {
+        return isLarge ? this.PlacedSize(rotation) * Grid.BLOCKS_PER_LARGE_BLOCK : this.PlacedSize(rotation);
+    }
+    public Vector2 CenterOffset(int rotation) {
+        return PlacedSizeSmall(rotation) * 0.5f * Grid.UNITS_PER_BLOCK;
+    }
+
     public Sprite[] spritesRotated;
     [HideInInspector]
     public byte rotation = 0;
@@ -52,6 +70,7 @@ public class Block : MonoBehaviour {
     }
 
     public virtual void OnPlace(Grid grid, Vector2I blockPos) {
+        this.blockPos = blockPos;
     }
     public virtual void OnRemove(Grid grid, Vector2I blockPos) {
     }
