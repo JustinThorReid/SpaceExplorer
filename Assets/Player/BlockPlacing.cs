@@ -59,22 +59,21 @@ public class BlockPlacing : MonoBehaviour
 
         Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector2I blockPos;
-        if(gameManager.allItems[selectedItem].CreatesBlock().isLarge) {
+        if(BlockToPlace(selectedItem).isLarge) {
             blockPos = grid.ConvertWorldSpaceToLargeBlockSpace(worldMousePos);
-            Vector2 worldPos = grid.ConvertBlockSpaceToWorldSpace(blockPos);
-            highlight.transform.position = worldPos + new Vector2(Grid.UNITS_PER_BLOCK_LARGE * 0.5f, Grid.UNITS_PER_BLOCK_LARGE * 0.5f);
-            highlight.transform.localScale = new Vector3(Grid.UNITS_PER_BLOCK_LARGE, Grid.UNITS_PER_BLOCK_LARGE, Grid.UNITS_PER_BLOCK_LARGE);
         } else {
             blockPos = grid.ConvertWorldSpaceToBlockSpace(worldMousePos);
-            Vector2 worldPos = grid.ConvertBlockSpaceToWorldSpace(blockPos);
-            highlight.transform.position = worldPos + new Vector2(Grid.UNITS_PER_BLOCK * 0.5f, Grid.UNITS_PER_BLOCK * 0.5f);
-            highlight.transform.localScale = new Vector3(Grid.UNITS_PER_BLOCK, Grid.UNITS_PER_BLOCK, Grid.UNITS_PER_BLOCK);
         }
 
+        Block blockToPlace = BlockToPlace(selectedItem);
+        Vector2 blockCenterOffset = blockToPlace.CenterOffset(rotation);
+        Vector2 worldPos = grid.ConvertBlockSpaceToWorldSpace(blockPos);
+
+        highlight.transform.position = blockCenterOffset + worldPos;
         highlight.transform.localRotation = grid.transform.rotation;
 
         if(Input.GetButtonUp("Fire1")) {
-            grid.TryAddBlock(CreateBlockInstance(selectedItem), blockPos, rotation);
+            grid.TryAddBlock(BlockToPlace(selectedItem), blockPos, rotation);
         }
         if(Input.GetButtonUp("Fire2")) {
             //TODO: A game manager that controls both grids and items should be responsible for spawning items/blocks
@@ -87,7 +86,7 @@ public class BlockPlacing : MonoBehaviour
         }
     }
 
-    private Block CreateBlockInstance(int type) {
+    private Block BlockToPlace(int type) {
         return gameManager.allItems[selectedItem].CreatesBlock();
     }
 }

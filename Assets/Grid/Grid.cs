@@ -139,7 +139,6 @@ public class Grid : MonoBehaviour {
         Vector2I placedSize = blockInstance.PlacedSize(blockInstance.rotation);
         Vector2I placePos = new Vector2I();
         if(blockInstance.isLarge) {
-            placedSize *= BLOCKS_PER_LARGE_BLOCK;
             Debug.Assert(blockPos.x % BLOCKS_PER_LARGE_BLOCK == 0, "Expected large block position is not a multiple of large block size");
 
             for(placePos.x = blockPos.x; placePos.x < blockPos.x + placedSize.x; placePos.x += (int)BLOCKS_PER_LARGE_BLOCK) {
@@ -183,20 +182,19 @@ public class Grid : MonoBehaviour {
     /// <param name="blockInstance"></param>
     /// <param name="blockPos"></param>
     /// <param name="size"></param>
-    private void positionBlock(Block blockInstance, Vector2I blockPos, Vector2I size) {
-        Vector2 position = blockPos + size * 0.5f;
+    private void positionBlock(Block blockInstance, Vector2I blockPos, int rotation) {
+        Vector2 position = blockPos * UNITS_PER_BLOCK + blockInstance.CenterOffset(rotation);
 
         blockInstance.transform.parent = transform;
-        blockInstance.transform.localPosition = position * UNITS_PER_BLOCK;
+        blockInstance.transform.localPosition = position;
     }
 
     private Block AddBlock(Block block, Vector2I blockPos, byte rotation) {
         Block placedBlock = Instantiate(block);
 
-        Vector2I placedSize = block.PlacedSize(rotation);
+        Vector2I placedSize = block.PlacedSizeSmall(rotation);
         Vector2I placePos = new Vector2I();
         if(placedBlock.isLarge) {
-            placedSize *= BLOCKS_PER_LARGE_BLOCK;
             Debug.Assert(blockPos.x % BLOCKS_PER_LARGE_BLOCK == 0, "Expected large block position is not a multiple of large block size");
 
             for(placePos.x = blockPos.x; placePos.x < blockPos.x + placedSize.x; placePos.x += (int)BLOCKS_PER_LARGE_BLOCK) {
@@ -204,18 +202,15 @@ public class Grid : MonoBehaviour {
                     setData(largeBlockData, placePos, placedBlock);
                 }
             }
-
-            positionBlock(placedBlock, blockPos, placedSize);
         } else {
             for(placePos.x = blockPos.x; placePos.x < blockPos.x + placedSize.x; placePos.x++) {
                 for(placePos.y = blockPos.y; placePos.y < blockPos.y + placedSize.y; placePos.y++) {
                     setData(blockData, placePos, placedBlock);
                 }
             }
-
-            positionBlock(placedBlock, blockPos, placedSize);
         }
 
+        positionBlock(placedBlock, blockPos, rotation);
         placedBlock.Init(rotation);
         placedBlock.OnPlace(this, blockPos);
         return placedBlock;

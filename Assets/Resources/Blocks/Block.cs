@@ -21,6 +21,13 @@ public class Block : MonoBehaviour {
         return placedSize;
     }
 
+    public Vector2I PlacedSizeSmall(int rotation) {
+        return isLarge ? this.PlacedSize(rotation) * Grid.BLOCKS_PER_LARGE_BLOCK : this.PlacedSize(rotation);
+    }
+    public Vector2 CenterOffset(int rotation) {
+        return PlacedSizeSmall(rotation) * 0.5f * Grid.UNITS_PER_BLOCK;
+    }
+
     public Sprite[] spritesRotated;
     [HideInInspector]
     public byte rotation = 0;
