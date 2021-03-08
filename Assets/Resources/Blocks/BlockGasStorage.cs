@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(PipeConnections))]
 public class BlockGasStorage : Block, Atmospheric
 {
     [SerializeField]
@@ -11,8 +12,10 @@ public class BlockGasStorage : Block, Atmospheric
     private float initialFuelMols = 0;
 
     private GasMix gasMix;
+    private PipeConnections connections;
 
     private void Awake() {
+        connections = GetComponent<PipeConnections>();
         gasMix = new GasMix(tankSizeLiters);
 
         if(initialFuelMols > 0)
@@ -47,6 +50,16 @@ public class BlockGasStorage : Block, Atmospheric
     }
 
     void Atmospheric.Tick() {
-        throw new System.NotImplementedException();
+        List<GasMix> mixes = new List<GasMix>(connections.sockets.Length);
+        mixes.Add(gasMix);
+
+        foreach(ConnectionSocket socket in connections.sockets) {
+            PipeNetwork network = ship.pipes.GetConnectingNetwork(blockPos + socket.relativeLoc, socket.dir);
+            if(network != null) {
+                mixes.Add(network.GetGasMix());
+            }
+        }
+
+        GasMix.Mix(mixes);
     }
 }

@@ -13,8 +13,9 @@ namespace Atmos
 		private bool showDebug = false;
 
 		private List<Atmospheric> atmoObjects = new List<Atmospheric>();
-
-
+        private static readonly float ticksPerSecond = 2;
+        private static readonly float timeBetweenTicks = 1 / ticksPerSecond;
+        private float timeUntilTick = 0;
 
 
         // https://en.wikipedia.org/wiki/Altitude_sickness
@@ -58,7 +59,18 @@ namespace Atmos
             }
 		}
 
-		public void AddAtmosphericObject(Atmospheric obj) {
+        private void Update() {
+            timeUntilTick -= Time.deltaTime;
+            if(timeUntilTick <= 0) {
+                timeUntilTick += timeBetweenTicks;
+
+                atmoObjects.ForEach(obj => {
+                    obj.Tick();
+                });
+            }
+        }
+
+        public void AddAtmosphericObject(Atmospheric obj) {
 			atmoObjects.Add(obj);
         }
 

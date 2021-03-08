@@ -24,7 +24,7 @@ public class PipeNetworkManager : MonoBehaviour
             network.pipes.ToList().ForEach(entry => {
                 Vector2 center = grid.ConvertBlockSpaceToWorldSpace(entry.Key) + Grid.BLOCK_OFFSET;
 
-                for(int i = 0; i < 4; i++) {
+                for(sbyte i = 0; i < 4; i++) {
                     if(entry.Value.HasConnectionPoint(i)) {
                         Vector2 dest = grid.transform.TransformPoint(Vector2I.DIRECTIONS[i] * Grid.BLOCK_OFFSET.x) + new Vector3(center.x, center.y, 0);
 
@@ -149,5 +149,29 @@ public class PipeNetworkManager : MonoBehaviour
         Debug.Assert(network.pipes.Count == 0, "Deleteing network that still has pipes. Missing connections");
         pipeNetworks.Remove(network);
 
+    }
+
+    /// <summary>
+    /// Get the network if any that has a pipe in from pos with an opening in toDir
+    /// </summary>
+    /// <param name="from"></param>
+    /// <param name="toDir"></param>
+    /// <returns></returns>
+    public PipeNetwork GetConnectingNetwork(Vector2I from, sbyte toDir) {
+        PipeNetwork networkWithPipe = pipeNetworks.Find(network => {
+            return network.pipes.ContainsKey(from);
+        });
+
+        if(networkWithPipe == null) {
+            return null;
+        }
+
+        BlockPipe pipe = networkWithPipe.GetBlockPipe(from);
+        Debug.Assert(pipe != null, "Network contains from key but no pipe found");
+
+        if(pipe.HasConnectionPoint(toDir)) {
+            return networkWithPipe;
+        }
+        return null;
     }
 }

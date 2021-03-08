@@ -44,6 +44,15 @@ public class PipeNetwork
         return gasMix.volume;
     }
 
+    /// <summary>
+    /// Get the gas mix contained by this network
+    /// </summary>
+    /// <returns></returns>
+    public GasMix GetGasMix() {
+        // TODO: On atmos tick take gasmix changes into account
+        return gasMix;
+    }
+
     public void AddConnectingPipe(Vector2I location, BlockPipe pipe) {
         Debug.Assert(ConnectedNeighbors(location, pipe).Count > 0, "Adding connected pipe that does not have connections");
 
@@ -54,7 +63,7 @@ public class PipeNetwork
     public List<(Vector2I, BlockPipe)> ConnectedNeighbors(Vector2I location, BlockPipe pipe) {
         List<(Vector2I, BlockPipe)> result = new List<(Vector2I, BlockPipe)>(4);
 
-        for(int i = 0; i < Vector2I.DIRECTIONS.Length; i++) {
+        for(sbyte i = 0; i < Vector2I.DIRECTIONS.Length; i++) {
             if(!pipe.HasConnectionPoint(i))
                 continue;
 
@@ -63,7 +72,7 @@ public class PipeNetwork
             BlockPipe testPipe;
 
             if(pipeBlocks.TryGetValue(testPos, out testPipe)) {
-                if(testPipe.HasConnectionPoint(Vector2I.RotateDirection(i, 2))) {
+                if(testPipe.HasConnectionPoint(Vector2I.RotateDirection((int)i, 2))) {
                     result.Add((testPos, testPipe));
                 }
             }
@@ -94,7 +103,7 @@ public class PipeNetwork
     /// <param name="location"></param>
     /// <param name="direction"></param>
     /// <returns></returns>
-    public bool HasConnection(Vector2I location, int direction) {
+    public bool HasConnection(Vector2I location, sbyte direction) {
         BlockPipe sourcePipe;
         if(!pipeBlocks.TryGetValue(location, out sourcePipe)) {
             return false;

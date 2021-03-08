@@ -40,7 +40,7 @@ public class BlockPipe : Block
         ship.pipes.RemovePipe(gridBlockPos, this);
     }
 
-    public bool HasConnectionPoint(int direction) {
+    public bool HasConnectionPoint(sbyte direction) {
         // Rotate the direction into "block space" before checking
         switch(Vector2I.RotateDirection(direction, -rotation)) {
             case 0:

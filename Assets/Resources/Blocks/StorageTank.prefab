@@ -92,16 +92,16 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 511080406409683723}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b67ff22c5285df34c9cf368ef79d4e87, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pipeConnections:
-  - x: -1
-    y: 1
-  - x: 0
-    y: 1
+  _connectionPoints:
+  - x: 1
+    y: 4
+  - x: 2
+    y: 4
 --- !u!114 &3093287313502495294
 MonoBehaviour:
   m_ObjectHideFlags: 0

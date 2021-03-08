@@ -12,6 +12,10 @@ namespace Atmos
 		internal GasCount(Gas type) {
 			gas = type;
         }
+		internal GasCount(Gas type, float mols) {
+			this.gas = type;
+			this.mols = mols;
+        }
     }
 
 	public class GasMix
@@ -20,6 +24,37 @@ namespace Atmos
 		public float temperature { get; private set; }
 		private List<GasCount> mols = new List<GasCount>();
 
+		/// <summary>
+		/// Spread total mols and temps across all gas mix's
+		/// </summary>
+		/// <param name="mixes"></param>
+		public static void Mix(List<GasMix> mixes) {
+			float totalVolume = 0;
+			List<GasCount> totalMols = new List<GasCount>();
+			mixes.ForEach(mix => {
+				totalVolume += mix.volume;
+
+				mix.mols.ForEach(gasCount => {
+					GasCount existing = totalMols.Find(gas => gas.gas == gasCount.gas);
+					if(existing == null) {
+						existing = new GasCount(gasCount.gas);
+						totalMols.Add(existing);
+					}
+
+					existing.mols += gasCount.mols;
+					// TODO: Keep track of temp while mixing
+				});
+			});
+
+			mixes.ForEach(mix => {
+				float pcnt = mix.volume / totalVolume;
+				mix.mols.Clear();
+
+				totalMols.ForEach(count => {
+					mix.mols.Add(new GasCount(count.gas, count.mols * pcnt));
+				});
+			});
+		}
 		/// <summary>
 		/// Create an empty GasMix with volume
 		/// </summary>
@@ -40,7 +75,6 @@ namespace Atmos
             }
 
 			existing.mols += molsToAdd;
-
 			// TODO: Raise/lower temp based on specific heat of other mix
         }
 
@@ -121,5 +155,12 @@ namespace Atmos
 
 			return result;
 		}
+
+		/// <summary>
+		/// Delete all gas inside this gasmix
+		/// </summary>
+		public void Clear() {
+			this.mols.Clear();
+        }
 	}
 }
