@@ -95,7 +95,7 @@ public class Grid : MonoBehaviour {
     public Block TryAddBlock(Block block, Vector2I blockPos, byte rotation) {
         Debug.Assert(block.gameObject.scene.rootCount == 0, "Attemping to add prefab instance to grid, expecting a prefab original");
 
-        Vector2I placedSize = block.isLarge ? block.PlacedSize(rotation) * BLOCKS_PER_LARGE_BLOCK : block.PlacedSize(rotation);
+        Vector2I placedSize = block.PlacedSizeSmall(rotation);
         Vector2I testPos = new Vector2I();
         for(testPos.x = blockPos.x; testPos.x < blockPos.x + placedSize.x; testPos.x++) {
             for(testPos.y = blockPos.y; testPos.y < blockPos.y + placedSize.y; testPos.y++) {
@@ -142,7 +142,7 @@ public class Grid : MonoBehaviour {
         Debug.Assert(blockInstance.gameObject.scene.rootCount != 0, "Attemping to remove prefab original from grid");
 
         Vector2I blockPos = blockInstance.blockPos;
-        Vector2I placedSize = blockInstance.PlacedSize(blockInstance.rotation);
+        Vector2I placedSize = blockInstance.PlacedSizeSmall(blockInstance.rotation);
         Vector2I placePos = new Vector2I();
         if(blockInstance.isLarge) {
             Debug.Assert(blockPos.x % BLOCKS_PER_LARGE_BLOCK == 0, "Expected large block position is not a multiple of large block size");

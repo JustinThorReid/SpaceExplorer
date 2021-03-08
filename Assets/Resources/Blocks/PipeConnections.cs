@@ -18,7 +18,7 @@ public class PipeConnections : MonoBehaviour
     /// In the future they should be grouped by type/name
     /// </summary>
     [SerializeField]
-    [Tooltip("Locations in small block system")]
+    [Header("Locations in small block system")]
     private Vector2I[] _connectionPoints;
     [HideInInspector]
     public ConnectionSocket[] socketsOriginal;

@@ -148,7 +148,5 @@ public class Block : MonoBehaviour {
         }
     }
     public virtual void OnRemove(ShipManager ship, Vector2I blockPos) {
-        this.ship = null;
-
     }
 }
