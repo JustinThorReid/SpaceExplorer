@@ -13,6 +13,15 @@ public class BlockPipe : Block
     private bool pipeConnectionLeft;
     [SerializeField]
     private bool pipeConnectionBottom;
+    [SerializeField]
+    private float _volume = 10; // 25 for medium-large pipes
+    public float volume
+    {
+        get {
+            return _volume;
+
+        }
+    }
 
     private void Awake() {
         if(pipeNetworkManager == null)

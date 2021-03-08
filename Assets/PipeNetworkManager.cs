@@ -40,6 +40,23 @@ public class PipeNetworkManager : MonoBehaviour
         });
     }
 
+    private void OnGUI() {
+        if(!showDebug)
+            return;
+
+        Color[] colors = { Color.red, Color.blue, Color.green, Color.magenta, Color.white, Color.black };
+
+        Grid grid = GetComponent<Grid>();
+        pipeNetworks.ToList().ForEach(network => {
+            Gizmos.color = colors[network.networkID % colors.Length];
+
+            Vector3 pos = network.pipes.First().Value.transform.position;
+            Vector2 screenPos = Camera.main.WorldToScreenPoint(pos);
+            screenPos.y = Screen.height - screenPos.y; // GUI space is upsidedown from normal screen space
+            GUI.Label(new Rect(screenPos, new Vector2(100, 20)), "Net: " + network.networkID + " vol: " + network.GetGasVolume());
+        });
+    }
+
     private PipeNetwork GetNetworkContainingPipe(Vector2I location, BlockPipe pipe) {
         PipeNetwork result = null;
         foreach(PipeNetwork pipeNetwork in pipeNetworks) {
@@ -78,10 +95,12 @@ public class PipeNetworkManager : MonoBehaviour
         return pipeNetwork;
     }
 
-    private PipeNetwork CreateNetwork(IEnumerable<(Vector2I, BlockPipe)> pipes) {
+    private PipeNetwork CreateNetwork(PipeNetwork originalNetwork, IEnumerable<(Vector2I, BlockPipe)> pipes) {
         lastNetworkID++;
-        PipeNetwork pipeNetwork = new PipeNetwork(lastNetworkID, pipes);
+        PipeNetwork pipeNetwork = new PipeNetwork(lastNetworkID, originalNetwork, pipes);
         pipeNetworks.Add(pipeNetwork);
+
+        Debug.Assert(!originalNetwork.pipes.ContainsKey(pipes.First().Item1), "Original network still has pipes after creating new network");
 
         return pipeNetwork;
     }
@@ -105,8 +124,7 @@ public class PipeNetworkManager : MonoBehaviour
                 if(network.GetBlockPipe(testLocation) != null) {
                     var chain = network.GetConnectedChain(testLocation);
                     if(!chain.Contains(testLocations[0])) {
-                        network.RemovePipes(chain);
-                        CreateNetwork(chain);
+                        CreateNetwork(network, chain);
                     }
                 }
             }

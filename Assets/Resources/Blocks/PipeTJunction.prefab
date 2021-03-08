@@ -100,6 +100,12 @@ MonoBehaviour:
   hasCollider: 0
   mass: 22
   isLarge: 0
+  size:
+    x: 1
+    y: 1
+  blockPos:
+    x: 0
+    y: 0
   spritesRotated:
   - {fileID: -4752754735582442470, guid: 47d18b47a59846e439569aaaa3e8c06e, type: 3}
   - {fileID: -2120189714087908947, guid: 47d18b47a59846e439569aaaa3e8c06e, type: 3}
@@ -111,3 +117,4 @@ MonoBehaviour:
   pipeConnectionRight: 1
   pipeConnectionLeft: 1
   pipeConnectionBottom: 1
+  _volume: 11

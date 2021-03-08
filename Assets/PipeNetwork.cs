@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Atmos;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -9,26 +10,45 @@ public class PipeNetwork
     public IReadOnlyDictionary<Vector2I, BlockPipe> pipes => pipeBlocks;
 
     public readonly int networkID;
+    private GasMix gasMix;
 
     public PipeNetwork(int networkID, Vector2I location, BlockPipe pipe) {
         this.networkID = networkID;
         pipeBlocks.Add(location, pipe);
-
+        gasMix = new GasMix(pipe.volume);
     }
 
-    public PipeNetwork(int networkID, IEnumerable<(Vector2I, BlockPipe)> pipes) {
+    /// <summary>
+    /// Create a new pipe network by taking away the pipes from the other network
+    /// </summary>
+    /// <param name="networkID"></param>
+    /// <param name="other"></param>
+    /// <param name="pipes"></param>
+    public PipeNetwork(int networkID, PipeNetwork other, IEnumerable<(Vector2I, BlockPipe)> pipes) {
         Debug.Assert(pipes.Count() > 0, "Attemping to create pipe network without any pipes");
 
+        float totalVolume = 0;
+
         this.networkID = networkID;
-        foreach(var tuple in pipes) {
-            pipeBlocks.Add(tuple.Item1, tuple.Item2);
+        foreach((Vector2I loc, BlockPipe pipe) in pipes) {
+            totalVolume += pipe.volume;
+
+            other.pipeBlocks.Remove(loc);
+            pipeBlocks.Add(loc, pipe);
         }
+
+        gasMix = other.gasMix.SplitGasMix(totalVolume);
+    }
+
+    public float GetGasVolume() {
+        return gasMix.volume;
     }
 
     public void AddConnectingPipe(Vector2I location, BlockPipe pipe) {
         Debug.Assert(ConnectedNeighbors(location, pipe).Count > 0, "Adding connected pipe that does not have connections");
 
         pipeBlocks.Add(location, pipe);
+        gasMix.ChangeVolume(pipe.volume);
     }
 
     public List<(Vector2I, BlockPipe)> ConnectedNeighbors(Vector2I location, BlockPipe pipe) {
@@ -89,14 +109,21 @@ public class PipeNetwork
     }
 
     public void AddPipeNetwork(PipeNetwork other) {
+        gasMix.Absorb(other.gasMix);
+
         other.pipeBlocks.ToList().ForEach(x => {
             this.pipeBlocks.Add(x.Key, x.Value);
-            other.RemovePipe(x.Key);
+            other.pipeBlocks.Remove(x.Key);
         });
     }
 
     public void RemovePipe(Vector2I location) {
         Debug.Assert(pipeBlocks.ContainsKey(location), "RemovePipe: Network has no pipe at location");
+
+        BlockPipe pipe;
+        if(pipeBlocks.TryGetValue(location, out pipe))
+            gasMix.ChangeVolume(pipe.volume * -1);
+
         pipeBlocks.Remove(location);
     }
 

@@ -40,9 +40,9 @@ public class BlockGasStorage : Block, Atmospheric
         location.y += step;
         GUI.Label(new Rect(location, new Vector2(150, step)), "Pres: " + gasMix.GetPressure());
 
-        foreach(KeyValuePair<Gas, float> gas in gasMix.GetCurrentGasses()) {
+        foreach(GasCount gas in gasMix.GetCurrentGasses()) {
             location.y += step;
-            GUI.Label(new Rect(location, new Vector2(150, step)), gas.Key.name + ": " + gas.Value);
+            GUI.Label(new Rect(location, new Vector2(150, step)), gas.gas.name + ": " + gas.mols);
         }
     }
 
