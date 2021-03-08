@@ -423,8 +423,9 @@ GameObject:
   - component: {fileID: 1980516064}
   - component: {fileID: 1980516063}
   - component: {fileID: 1980516065}
+  - component: {fileID: 1980516066}
   m_Layer: 0
-  m_Name: MainGrid
+  m_Name: MainShip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -466,5 +467,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7fa935799d8b4fc4196fa7be16cb6a12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showDebug: 0
+--- !u!114 &1980516066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1980516062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39c0a3148ca92ee499733c24931dc13e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

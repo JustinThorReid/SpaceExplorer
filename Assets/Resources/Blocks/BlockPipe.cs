@@ -19,16 +19,16 @@ public class BlockPipe : Block
             pipeNetworkManager = FindObjectOfType<PipeNetworkManager>();
     }
 
-    public override void OnPlace(Grid grid, Vector2I gridBlockPos) {
-        base.OnPlace(grid, gridBlockPos);
+    public override void OnPlace(ShipManager ship, Vector2I gridBlockPos) {
+        base.OnPlace(ship, gridBlockPos);
 
-        pipeNetworkManager.AddPipe(grid, gridBlockPos, this);
+        ship.pipes.AddPipe(gridBlockPos, this);
     }
 
-    public override void OnRemove(Grid grid, Vector2I gridBlockPos) {
-        base.OnRemove(grid, gridBlockPos);
+    public override void OnRemove(ShipManager ship, Vector2I gridBlockPos) {
+        base.OnRemove(ship, gridBlockPos);
 
-        pipeNetworkManager.RemovePipe(grid, gridBlockPos, this);
+        ship.pipes.RemovePipe(gridBlockPos, this);
     }
 
     public bool HasConnectionPoint(int direction) {

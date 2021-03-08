@@ -38,6 +38,6 @@ public class PipeConnections : MonoBehaviour
         }
     }
 
-    public void OnPlace(Grid grid, Vector2I gridBlockPos) {
+    public void OnPlace(ShipManager ship, Vector2I gridBlockPos) {
     }
 }

@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using UnityEngine;
 
+[RequireComponent(typeof(ShipManager))]
 public class Grid : MonoBehaviour {
     public static readonly uint BLOCKS_PER_UNIT = 2;
     public static readonly uint BLOCKS_PER_LARGE_BLOCK = 2;
@@ -16,6 +17,11 @@ public class Grid : MonoBehaviour {
 
     private Dictionary<Vector2I, List<Block>> blockData;
     private Dictionary<Vector2I, List<Block>> largeBlockData;
+    private ShipManager ship;
+
+    private void Awake() {
+        ship = GetComponent<ShipManager>();
+    }
 
     void Start() {
         blockData = new Dictionary<Vector2I, List<Block>>();
@@ -125,7 +131,7 @@ public class Grid : MonoBehaviour {
         }
 
         if(removed != null) {
-            removed.OnRemove(this, blockPos);
+            removed.OnRemove(ship, blockPos);
         }
 
         return removed;
@@ -212,7 +218,7 @@ public class Grid : MonoBehaviour {
 
         positionBlock(placedBlock, blockPos, rotation);
         placedBlock.Init(rotation);
-        placedBlock.OnPlace(this, blockPos);
+        placedBlock.OnPlace(ship, blockPos);
         return placedBlock;
     }
 

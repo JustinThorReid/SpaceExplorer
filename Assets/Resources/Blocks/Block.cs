@@ -69,15 +69,15 @@ public class Block : MonoBehaviour {
         return spritesRotated[rotation % spritesRotated.Length];
     }
 
-    public virtual void OnPlace(Grid grid, Vector2I blockPos) {
+    public virtual void OnPlace(ShipManager ship, Vector2I blockPos) {
         this.blockPos = blockPos;
 
         // TODO: This should be handled generically with events or interface
         PipeConnections connectionComp = GetComponent<PipeConnections>();
         if(connectionComp != null) {
-            connectionComp.OnPlace(grid, blockPos);
+            connectionComp.OnPlace(ship, blockPos);
         }
     }
-    public virtual void OnRemove(Grid grid, Vector2I blockPos) {
+    public virtual void OnRemove(ShipManager ship, Vector2I blockPos) {
     }
 }

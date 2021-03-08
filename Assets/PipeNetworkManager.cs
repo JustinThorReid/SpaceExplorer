@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class PipeNetworkManager : MonoBehaviour
 {
-    Dictionary<Grid, List<PipeNetwork>> pipeNetworks = new Dictionary<Grid, List<PipeNetwork>>();
+    List<PipeNetwork> pipeNetworks = new List<PipeNetwork>();
     private int lastNetworkID = -1;
     [SerializeField]
     private bool showDebug = false;
@@ -17,45 +17,32 @@ public class PipeNetworkManager : MonoBehaviour
 
         Color[] colors = { Color.red, Color.blue, Color.green, Color.magenta, Color.white, Color.black};
 
-        pipeNetworks.ToList().ForEach(gridNetwork => {
-            Grid grid = gridNetwork.Key;
+        Grid grid = GetComponent<Grid>();
+        pipeNetworks.ToList().ForEach(network => {
+            Gizmos.color = colors[network.networkID % colors.Length];
 
-            gridNetwork.Value.ForEach(network => {
-                Gizmos.color = colors[network.networkID % colors.Length];
+            network.pipes.ToList().ForEach(entry => {
+                Vector2 center = grid.ConvertBlockSpaceToWorldSpace(entry.Key) + Grid.BLOCK_OFFSET;
 
-                network.pipes.ToList().ForEach(entry => {
-                    Vector2 center = grid.ConvertBlockSpaceToWorldSpace(entry.Key) + Grid.BLOCK_OFFSET;
+                for(int i = 0; i < 4; i++) {
+                    if(entry.Value.HasConnectionPoint(i)) {
+                        Vector2 dest = grid.transform.TransformPoint(Vector2I.DIRECTIONS[i] * Grid.BLOCK_OFFSET.x) + new Vector3(center.x, center.y, 0);
 
-                    for(int i = 0; i < 4; i++) {
-                        if(entry.Value.HasConnectionPoint(i)) {
-                            Vector2 dest = grid.transform.TransformPoint(Vector2I.DIRECTIONS[i] * Grid.BLOCK_OFFSET.x) + new Vector3(center.x, center.y, 0);
-
-                            if(network.HasConnection(entry.Key, i)) {
-                                Gizmos.DrawLine(center, dest);
-                            } else {
-                                Gizmos.DrawLine(center, dest);
-                                Gizmos.DrawSphere(dest, 0.1f);
-                            }
+                        if(network.HasConnection(entry.Key, i)) {
+                            Gizmos.DrawLine(center, dest);
+                        } else {
+                            Gizmos.DrawLine(center, dest);
+                            Gizmos.DrawSphere(dest, 0.1f);
                         }
                     }
-                });
+                }
             });
         });
     }
 
-    private List<PipeNetwork> GetNetworksForGrid(Grid grid) {
-        List<PipeNetwork> gridNetworks;
-        if(!pipeNetworks.TryGetValue(grid, out gridNetworks)) {
-            gridNetworks = new List<PipeNetwork>();
-            pipeNetworks.Add(grid, gridNetworks);
-        }
-
-        return gridNetworks;
-    }
-
-    private PipeNetwork GetNetworkContainingPipe(List<PipeNetwork> gridNetworks, Vector2I location, BlockPipe pipe) {
+    private PipeNetwork GetNetworkContainingPipe(Vector2I location, BlockPipe pipe) {
         PipeNetwork result = null;
-        foreach(PipeNetwork pipeNetwork in gridNetworks) {
+        foreach(PipeNetwork pipeNetwork in pipeNetworks) {
             if(pipeNetwork.GetBlockPipe(location) != null) { 
                 Debug.Assert(result == null, "Found a pipe that is in 2 networks at the same time");
                 result = pipeNetwork;
@@ -65,52 +52,49 @@ public class PipeNetworkManager : MonoBehaviour
         return result;
     }
 
-    public void AddPipe(Grid grid, Vector2I location, BlockPipe pipeToAdd) {
-        List<PipeNetwork> gridNetworks = GetNetworksForGrid(grid);
-
+    public void AddPipe(Vector2I location, BlockPipe pipeToAdd) {
         // Try to join with an existing network
         List<PipeNetwork> connectedNetworks = new List<PipeNetwork>(4);
-        foreach(PipeNetwork pipeNetwork in gridNetworks) {
+        foreach(PipeNetwork pipeNetwork in pipeNetworks) {
             if(pipeNetwork.ConnectedNeighbors(location, pipeToAdd).Count > 0) {
                 connectedNetworks.Add(pipeNetwork);
             }
         }
 
         if(connectedNetworks.Count == 0) {
-            CreateNetwork(gridNetworks, location, pipeToAdd);
+            CreateNetwork(location, pipeToAdd);
         } else if(connectedNetworks.Count == 1) {
             AddConnectingPipe(connectedNetworks[0], location, pipeToAdd);
         } else {
-            MergePipeNetworks(gridNetworks, connectedNetworks, location, pipeToAdd);
+            MergePipeNetworks(connectedNetworks, location, pipeToAdd);
         }
     }
 
-    private PipeNetwork CreateNetwork(List<PipeNetwork> gridNetworks, Vector2I location, BlockPipe pipe) {
+    private PipeNetwork CreateNetwork(Vector2I location, BlockPipe pipe) {
         lastNetworkID++;
         PipeNetwork pipeNetwork = new PipeNetwork(lastNetworkID, location, pipe);
-        gridNetworks.Add(pipeNetwork);
+        pipeNetworks.Add(pipeNetwork);
 
         return pipeNetwork;
     }
 
-    private PipeNetwork CreateNetwork(List<PipeNetwork> gridNetworks, IEnumerable<(Vector2I, BlockPipe)> pipes) {
+    private PipeNetwork CreateNetwork(IEnumerable<(Vector2I, BlockPipe)> pipes) {
         lastNetworkID++;
         PipeNetwork pipeNetwork = new PipeNetwork(lastNetworkID, pipes);
-        gridNetworks.Add(pipeNetwork);
+        pipeNetworks.Add(pipeNetwork);
 
         return pipeNetwork;
     }
 
-    public void RemovePipe(Grid grid, Vector2I location, BlockPipe pipeToRemove) {
-        List<PipeNetwork> gridNetworks = GetNetworksForGrid(grid);
-        PipeNetwork network = GetNetworkContainingPipe(gridNetworks, location, pipeToRemove);
+    public void RemovePipe(Vector2I location, BlockPipe pipeToRemove) {
+        PipeNetwork network = GetNetworkContainingPipe(location, pipeToRemove);
 
         List<(Vector2I, BlockPipe)> testLocations = network.ConnectedNeighbors(location);
         network.RemovePipe(location);
 
         // Decompose network
         if(testLocations.Count == 0) {
-            DeleteNetwork(gridNetworks, network);
+            DeleteNetwork(network);
         } else if(testLocations.Count == 1) {
             // Network needs no changes
         } else {
@@ -122,7 +106,7 @@ public class PipeNetworkManager : MonoBehaviour
                     var chain = network.GetConnectedChain(testLocation);
                     if(!chain.Contains(testLocations[0])) {
                         network.RemovePipes(chain);
-                        CreateNetwork(gridNetworks, chain);
+                        CreateNetwork(chain);
                     }
                 }
             }
@@ -133,19 +117,19 @@ public class PipeNetworkManager : MonoBehaviour
         network.AddConnectingPipe(location, pipe);
     }
 
-    private void MergePipeNetworks(List<PipeNetwork> gridNetworks, List<PipeNetwork> pipeNetworks, Vector2I location, BlockPipe pipe) {
-        PipeNetwork primary = pipeNetworks[0];
+    private void MergePipeNetworks(List<PipeNetwork> pipeNetworksToMerge, Vector2I location, BlockPipe pipe) {
+        PipeNetwork primary = pipeNetworksToMerge[0];
         AddConnectingPipe(primary, location, pipe);
 
-        for(int i = 1; i < pipeNetworks.Count; i++) {
-            primary.AddPipeNetwork(pipeNetworks[i]);
-            DeleteNetwork(gridNetworks, pipeNetworks[i]);
+        for(int i = 1; i < pipeNetworksToMerge.Count; i++) {
+            primary.AddPipeNetwork(pipeNetworksToMerge[i]);
+            DeleteNetwork(pipeNetworksToMerge[i]);
         }
     }
 
-    private void DeleteNetwork(List<PipeNetwork> gridNetworks, PipeNetwork network) {
+    private void DeleteNetwork(PipeNetwork network) {
         Debug.Assert(network.pipes.Count == 0, "Deleteing network that still has pipes. Missing connections");
-        gridNetworks.Remove(network);
+        pipeNetworks.Remove(network);
 
     }
 }

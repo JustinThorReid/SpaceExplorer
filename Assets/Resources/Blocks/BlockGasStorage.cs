@@ -19,16 +19,16 @@ public class BlockGasStorage : Block, Atmospheric
             gasMix.AddGas(Gas.Fuel, initialFuelMols);
     }
 
-    public override void OnPlace(Grid grid, Vector2I gridBlockPos) {
-        base.OnPlace(grid, gridBlockPos);
+    public override void OnPlace(ShipManager ship, Vector2I gridBlockPos) {
+        base.OnPlace(ship, gridBlockPos);
 
-        grid.GetComponent<AtmoManager>().AddAtmosphericObject(this);
+        ship.atmo.AddAtmosphericObject(this);
     }
 
-    public override void OnRemove(Grid grid, Vector2I blockPos) {
-        base.OnRemove(grid, blockPos);
+    public override void OnRemove(ShipManager ship, Vector2I blockPos) {
+        base.OnRemove(ship, blockPos);
 
-        grid.GetComponent<AtmoManager>().RemoveAtmosphericObject(this);
+        ship.atmo.RemoveAtmosphericObject(this);
     }
 
     void Atmospheric.DrawDebugGUI(Vector2 location) {
