@@ -71,6 +71,12 @@ public class Block : MonoBehaviour {
 
     public virtual void OnPlace(Grid grid, Vector2I blockPos) {
         this.blockPos = blockPos;
+
+        // TODO: This should be handled generically with events or interface
+        PipeConnections connectionComp = GetComponent<PipeConnections>();
+        if(connectionComp != null) {
+            connectionComp.OnPlace(grid, blockPos);
+        }
     }
     public virtual void OnRemove(Grid grid, Vector2I blockPos) {
     }
