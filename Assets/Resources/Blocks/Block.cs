@@ -23,12 +23,12 @@ public class Block : MonoBehaviour {
     protected ShipManager ship;
 
     /// <summary>
-    /// Given a vec relative to prefab, return a vec relative to placed block
+    /// Given a block position relative to prefab block origin point, return a vec relative to placed block.
     /// </summary>
     /// <param name="amount"></param>
     /// <returns></returns>
-    public Vector2I RotateBlock(Vector2I vec) {
-        Vector2I result = new Vector2I(vec);
+    public Vector2I RotateBlock(Vector2I blockPos) {
+        Vector2I result = new Vector2I(blockPos);
 
         switch(rotation) {
             case 0:
@@ -52,12 +52,12 @@ public class Block : MonoBehaviour {
         throw new Exception("Unhandled rotation");
     }
     /// <summary>
-    /// Given a vec relative to prefab, return a vec relative to placed block
+    /// Given a block position relative to prefab block origin point, return a vec relative to placed block.
     /// </summary>
     /// <param name="amount"></param>
     /// <returns></returns>
-    public Vector2I RotateBlockSmall(Vector2I vec) {
-        Vector2I result = new Vector2I(vec);
+    public Vector2I RotateBlockSmall(Vector2I blockPos) {
+        Vector2I result = new Vector2I(blockPos);
 
         switch(rotation) {
             case 0:
@@ -74,6 +74,35 @@ public class Block : MonoBehaviour {
             case 3:
                 int t2 = result.x;
                 result.x = -result.y + PlacedSizeSmall(rotation).x;
+                result.y = t2;
+                return result;
+        }
+
+        throw new Exception("Unhandled rotation");
+    }
+
+    /// <summary>
+    /// Given a vec relative to prefab, return a vec relative to placed block in game units.
+    /// This only works for children game objects after the block has been placed in the world, it rotates around the sprite center point, not block placement position
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <returns></returns>
+    public Vector2 RotateBlockSmall(Vector2 result) {
+        switch(rotation) {
+            case 0:
+                return result;
+            case 1:
+                float t = result.x;
+                result.x = result.y;
+                result.y = -t;
+                return result;
+            case 2:
+                result.x = -result.x;
+                result.y = -result.y;
+                return result;
+            case 3:
+                float t2 = result.x;
+                result.x = -result.y;
                 result.y = t2;
                 return result;
         }
@@ -145,6 +174,15 @@ public class Block : MonoBehaviour {
         PipeConnections c = GetComponent<PipeConnections>();
         if(c != null) {
             c.OnPlace();
+        }
+
+        // TODO: Move rotating objects to known child
+        int children = transform.childCount;
+        for(int i = 0; i < children; i++) {
+            Vector2 rotated = RotateBlockSmall(transform.GetChild(i).localPosition);
+            transform.GetChild(i).localPosition = new Vector3(rotated.x, rotated.y, transform.GetChild(i).localPosition.z);
+
+            transform.GetChild(i).localRotation = Quaternion.Euler((rotation +1) * 90, 90, 0);
         }
     }
     public virtual void OnRemove(ShipManager ship, Vector2I blockPos) {

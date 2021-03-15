@@ -36,6 +36,10 @@ public class BlockPlacing : MonoBehaviour
             selectedItem = 2;
         if(Input.GetKeyDown(KeyCode.Alpha4))
             selectedItem = 3;
+        if(Input.GetKeyDown(KeyCode.Alpha5))
+            selectedItem = 4;
+        if(Input.GetKeyDown(KeyCode.Alpha6))
+            selectedItem = 5;
         selectedItem = Mathf.Max(0, Mathf.Min(selectedItem, gameManager.allItems.Length - 1));
 
         // Select kit item
