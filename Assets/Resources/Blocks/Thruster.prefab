@@ -140,6 +140,7 @@ MonoBehaviour:
   - {fileID: -3844587777362971736, guid: 57da4f9b8d02a8647b1254752892025f, type: 3}
   rotation: 0
   createsItem: {fileID: 6107568717372161505, guid: 11e5098b0d8b5d5478f7724ea937c4e2, type: 3}
+  thrusterEfect: {fileID: 4602099735498828820}
 --- !u!1 &4602099735498828820
 GameObject:
   m_ObjectHideFlags: 0
@@ -157,7 +158,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4378983635060308643
 Transform:
   m_ObjectHideFlags: 0
