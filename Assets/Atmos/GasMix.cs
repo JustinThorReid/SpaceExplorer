@@ -66,6 +66,8 @@ namespace Atmos
 		}
 
 		public void AddGas(Gas type, float molsToAdd) {
+			Debug.Assert(molsToAdd >= 0);
+
 			var existing = mols.Find(pair => {
 				return pair.gas == type;
 			});
@@ -77,6 +79,20 @@ namespace Atmos
 			existing.mols += molsToAdd;
 			// TODO: Raise/lower temp based on specific heat of other mix
         }
+
+		public void RemoveGas(Gas type, float molsToRemove) {
+			Debug.Assert(molsToRemove >= 0);
+
+			var existing = mols.Find(pair => {
+				return pair.gas == type;
+			});
+			if(existing == null) {
+				existing = new GasCount(type);
+				mols.Add(existing);
+			}
+
+			existing.mols = Mathf.Max(existing.mols - molsToRemove, 0);
+		}
 
 		/// <summary>
 		/// Take all gas and volume from other. Does not delete other, or change its volume, does remove other's gasses.
