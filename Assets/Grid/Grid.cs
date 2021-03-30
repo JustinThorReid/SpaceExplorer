@@ -18,9 +18,11 @@ public class Grid : MonoBehaviour {
     private Dictionary<Vector2I, List<Block>> blockData;
     private Dictionary<Vector2I, List<Block>> largeBlockData;
     private ShipManager ship;
+    private Rigidbody2D rb;
 
     private void Awake() {
         ship = GetComponent<ShipManager>();
+        rb = GetComponent<Rigidbody2D>();
     }
 
     void Start() {
@@ -161,6 +163,10 @@ public class Grid : MonoBehaviour {
         }
 
         Destroy(blockInstance.gameObject);
+
+        if(rb != null) {
+            recalculateMass();
+        }
     }
 
     private void setData(Dictionary<Vector2I, List<Block>> dict, Vector2I pos, Block block) {
@@ -196,6 +202,49 @@ public class Grid : MonoBehaviour {
         blockInstance.transform.localRotation = Quaternion.identity;
     }
 
+    private void recalculateMass() {
+        Debug.Assert(rb != null, "Called recalculate mass with no rigidbody");
+
+        var allKeys = blockData.Keys.Concat(largeBlockData.Keys);
+
+        Vector2I lowerBound;
+        Vector2I upperBound;
+
+        lowerBound.x = allKeys.Min(v => v.x);
+        lowerBound.y = allKeys.Min(v => v.y);
+        upperBound.x = allKeys.Max(v => v.x);
+        upperBound.y = allKeys.Max(v => v.y);
+
+        Vector2 blockSpaceCOM = new Vector2((upperBound.x - lowerBound.x) / 2 + lowerBound.x, (upperBound.y - lowerBound.y) / 2 + lowerBound.y);
+        rb.centerOfMass = blockSpaceCOM * Grid.UNITS_PER_BLOCK;
+
+        float mass = 0;
+        HashSet<Block> blocks = new HashSet<Block>();
+        foreach(List<Block> column in blockData.Values) {
+            foreach(Block block in column) {
+                if(blocks.Contains(block)) {
+                    continue;
+                }
+
+                blocks.Add(block);
+                mass += block.mass;
+            }
+        }
+
+        foreach(List<Block> column in largeBlockData.Values) {
+            foreach(Block block in column) {
+                if(blocks.Contains(block)) {
+                    continue;
+                }
+
+                blocks.Add(block);
+                mass += block.mass;
+            }
+        }
+
+        rb.mass = mass;
+    }
+
     private Block AddBlock(Block block, Vector2I blockPos, byte rotation) {
         Block placedBlock = Instantiate(block);
 
@@ -220,6 +269,11 @@ public class Grid : MonoBehaviour {
         positionBlock(placedBlock, blockPos, rotation);
         placedBlock.Init(rotation);
         placedBlock.OnPlace(ship, blockPos);
+
+        if(rb != null) {
+            recalculateMass();
+        }
+
         return placedBlock;
     }
 

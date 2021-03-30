@@ -17,4 +17,13 @@ public class ShipManager : MonoBehaviour
         grid = GetComponent<Grid>();
         pipes = GetComponent<PipeNetworkManager>();
     }
+
+    private void Update() {
+
+        if(Input.GetButton("Jump")) {
+            GetComponent<Rigidbody2D>().angularVelocity = 10;
+        } else {
+            GetComponent<Rigidbody2D>().angularVelocity = 0;
+        }
+    }
 }

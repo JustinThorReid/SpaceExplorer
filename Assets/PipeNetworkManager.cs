@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+[RequireComponent(typeof(Grid))]
 public class PipeNetworkManager : MonoBehaviour
 {
     List<PipeNetwork> pipeNetworks = new List<PipeNetwork>();
@@ -18,7 +19,7 @@ public class PipeNetworkManager : MonoBehaviour
         Color[] colors = { Color.red, Color.blue, Color.green, Color.magenta, Color.white, Color.black};
 
         Grid grid = GetComponent<Grid>();
-        Vector2 blockOffset = grid.transform.TransformDirection(Grid.BLOCK_OFFSET);
+        Vector2 blockOffset = transform.TransformDirection(Grid.BLOCK_OFFSET);
 
         pipeNetworks.ToList().ForEach(network => {
             Gizmos.color = colors[network.networkID % colors.Length];
