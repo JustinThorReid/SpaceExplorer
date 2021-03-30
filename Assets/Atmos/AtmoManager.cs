@@ -44,7 +44,6 @@ namespace Atmos
             return ((kpa * liters) / R_IDEAL_GAS_EQUATION) / kelvin;
         }
 
-
         private void OnGUI() {
 			if(!showDebug)
 				return;

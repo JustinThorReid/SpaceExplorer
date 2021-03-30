@@ -18,11 +18,13 @@ public class PipeNetworkManager : MonoBehaviour
         Color[] colors = { Color.red, Color.blue, Color.green, Color.magenta, Color.white, Color.black};
 
         Grid grid = GetComponent<Grid>();
+        Vector2 blockOffset = grid.transform.TransformDirection(Grid.BLOCK_OFFSET);
+
         pipeNetworks.ToList().ForEach(network => {
             Gizmos.color = colors[network.networkID % colors.Length];
 
             network.pipes.ToList().ForEach(entry => {
-                Vector2 center = grid.ConvertBlockSpaceToWorldSpace(entry.Key) + Grid.BLOCK_OFFSET;
+                Vector2 center = grid.ConvertBlockSpaceToWorldSpace(entry.Key) + blockOffset;
 
                 for(sbyte i = 0; i < 4; i++) {
                     if(entry.Value.HasConnectionPoint(i)) {

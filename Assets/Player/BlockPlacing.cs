@@ -70,11 +70,11 @@ public class BlockPlacing : MonoBehaviour
         }
 
         Block blockToPlace = BlockToPlace(selectedItem);
-        Vector2 blockCenterOffset = blockToPlace.CenterOffset(rotation);
+        Vector2 blockCenterOffset = grid.transform.TransformDirection(blockToPlace.CenterOffset(rotation));
         Vector2 worldPos = grid.ConvertBlockSpaceToWorldSpace(blockPos);
 
         highlight.transform.position = blockCenterOffset + worldPos;
-        highlight.transform.localRotation = grid.transform.rotation;
+        highlight.transform.localRotation = grid.transform.localRotation;
 
         if(Input.GetButtonUp("Fire1")) {
             grid.TryAddBlock(BlockToPlace(selectedItem), blockPos, rotation);

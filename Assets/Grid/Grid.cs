@@ -193,6 +193,7 @@ public class Grid : MonoBehaviour {
 
         blockInstance.transform.parent = transform;
         blockInstance.transform.localPosition = position;
+        blockInstance.transform.localRotation = Quaternion.identity;
     }
 
     private Block AddBlock(Block block, Vector2I blockPos, byte rotation) {
