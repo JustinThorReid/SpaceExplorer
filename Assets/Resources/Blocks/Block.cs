@@ -149,6 +149,10 @@ public class Block : MonoBehaviour {
         }
     }
 
+    public bool CanBeAttached(int direction, Block other) {
+        return other.layer >= layer;
+    }
+
     // Use this for initialization
     void Start() {
         Debug.Assert(spritesRotated.Length > 0, "Missing sprites");

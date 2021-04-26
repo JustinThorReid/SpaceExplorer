@@ -23,12 +23,12 @@ public class Grid : MonoBehaviour {
     private void Awake() {
         ship = GetComponent<ShipManager>();
         rb = GetComponent<Rigidbody2D>();
+
+        blockData = new Dictionary<Vector2I, List<Block>>();
+        largeBlockData = new Dictionary<Vector2I, List<Block>>();
     }
 
     void Start() {
-        blockData = new Dictionary<Vector2I, List<Block>>();
-        largeBlockData = new Dictionary<Vector2I, List<Block>>();
-
         Debug.Assert(GetContainingLargeBlockPos(new Vector2I(0, 0)) == new Vector2I(0, 0));
         Debug.Assert(GetContainingLargeBlockPos(new Vector2I(1, 0)) == new Vector2I(0, 0));
         Debug.Assert(GetContainingLargeBlockPos(new Vector2I(2, 0)) == new Vector2I(2, 0));
@@ -85,6 +85,66 @@ public class Grid : MonoBehaviour {
         return miniBlocks;
     }
 
+    public bool CanAttach(Block blockType, Vector2I blockPos, byte rotation) {
+        Debug.Assert(blockType.gameObject.scene.rootCount == 0, "Expecting a prefab original");
+
+        Vector2I placedSize = blockType.PlacedSizeSmall(rotation);
+        Vector2I testPos = new Vector2I();
+        for(int i = 0; i < placedSize.x; i++) {
+            testPos.x = blockPos.x + i;
+            testPos.y = blockPos.y + placedSize.y + 1;
+
+            foreach(Block block in GetIntersectingBlocks(testPos)) {
+                if(block.CanBeAttached(Vector2I.DIR_DOWN, blockType)) {
+                    return true;
+                }
+            }
+
+            testPos.y = blockPos.y - 1;
+            foreach(Block block in GetIntersectingBlocks(testPos)) {
+                if(block.CanBeAttached(Vector2I.DIR_UP, blockType)) {
+                    return true;
+                }
+            }
+        }
+
+        for(int i = 0; i < placedSize.y; i++) {
+            testPos.y = blockPos.y + i;
+            testPos.x = blockPos.x + placedSize.x + 1;
+
+            foreach(Block block in GetIntersectingBlocks(testPos)) {
+                if(block.CanBeAttached(Vector2I.DIR_LEFT, blockType)) {
+                    return true;
+                }
+            }
+
+            testPos.x = blockPos.x - 1;
+            foreach(Block block in GetIntersectingBlocks(testPos)) {
+                if(block.CanBeAttached(Vector2I.DIR_RIGHT, blockType)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public bool CanPlace(Block blockType, Vector2I blockPos, byte rotation) {
+        Debug.Assert(blockType.gameObject.scene.rootCount == 0, "Expecting a prefab original");
+
+        Vector2I placedSize = blockType.PlacedSizeSmall(rotation);
+        Vector2I testPos = new Vector2I();
+        for(testPos.x = blockPos.x; testPos.x < blockPos.x + placedSize.x; testPos.x++) {
+            for(testPos.y = blockPos.y; testPos.y < blockPos.y + placedSize.y; testPos.y++) {
+                if(!blockType.CanBePlacedIn(GetIntersectingBlocks(testPos))) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     public List<Block> GetIntersectingBlocks(Vector2I blockPos) {
         Vector2I largePos = GetContainingLargeBlockPos(blockPos);
 
@@ -94,20 +154,21 @@ public class Grid : MonoBehaviour {
         return bigBlocks.Concat(miniBlocks).ToList();
     }
 
+    public Block ForcePlaceBlock(Block block, Vector2I blockPos, byte rotation) {
+        Debug.Assert(block.gameObject.scene.rootCount == 0, "Attemping to add prefab instance to grid, expecting a prefab original");
+
+        return AddBlock(block, blockPos, rotation);
+    }
     public Block TryAddBlock(Block block, Vector2I blockPos, byte rotation) {
         Debug.Assert(block.gameObject.scene.rootCount == 0, "Attemping to add prefab instance to grid, expecting a prefab original");
 
-        Vector2I placedSize = block.PlacedSizeSmall(rotation);
-        Vector2I testPos = new Vector2I();
-        for(testPos.x = blockPos.x; testPos.x < blockPos.x + placedSize.x; testPos.x++) {
-            for(testPos.y = blockPos.y; testPos.y < blockPos.y + placedSize.y; testPos.y++) {
-                if(!block.CanBePlacedIn(GetIntersectingBlocks(testPos))) {
-                    return null;
-                }
-            }
-        }
+        if(TestBlockPlacement(block, blockPos, rotation))
+            return AddBlock(block, blockPos, rotation);
 
-        return AddBlock(block, blockPos, rotation);
+        return null;
+    }
+    public bool TestBlockPlacement(Block block, Vector2I blockPos, byte rotation) {
+        return CanPlace(block, blockPos, rotation) && CanAttach(block, blockPos, rotation);
     }
 
     /// <summary>

@@ -9,7 +9,8 @@ public class GameManager : MonoBehaviour
     public Item[] allItems;
     [HideInInspector]
     public Block[] allBlocks;
-
+    [SerializeField]
+    private Grid gridPrefab;
     void Awake()
     {
         allItems = Resources.LoadAll<Item>("Blocks");
@@ -18,4 +19,16 @@ public class GameManager : MonoBehaviour
         Debug.Log("Loaded " + allBlocks.Length + " blocks");
     }
 
+    public Grid createGrid(Vector2 position, Quaternion rotation, Block initialBlock, byte blockRotation) {
+        Grid grid = Instantiate<Grid>(gridPrefab);
+        grid.transform.position = position;
+        grid.transform.rotation = rotation;
+
+        grid.ForcePlaceBlock(initialBlock, Vector2I.ZERO, blockRotation);
+        return grid;
+    }
+
+    public Grid[] allGrids() {
+        return FindObjectsOfType<Grid>();
+    }
 }

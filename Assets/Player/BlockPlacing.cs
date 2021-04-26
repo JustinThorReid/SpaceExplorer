@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class BlockPlacing : MonoBehaviour
 {
-    public Grid grid;
     public SpriteRenderer highlight;
 
     private int selectedItem = 0;
@@ -61,36 +60,63 @@ public class BlockPlacing : MonoBehaviour
         highlight.sprite = gameManager.allItems[selectedItem].GetPreviewSprite(rotation);
         highlight.color = new Color(1, 1, 1, 0.5f);
 
-        Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2I blockPos;
-        if(BlockToPlace(selectedItem).isLarge) {
-            blockPos = grid.ConvertWorldSpaceToLargeBlockSpace(worldMousePos);
-        } else {
-            blockPos = grid.ConvertWorldSpaceToBlockSpace(worldMousePos);
-        }
-
         Block blockToPlace = BlockToPlace(selectedItem);
-        Vector2 blockCenterOffset = grid.transform.TransformDirection(blockToPlace.CenterOffset(rotation));
-        Vector2 worldPos = grid.ConvertBlockSpaceToWorldSpace(blockPos);
+        (Grid grid, Vector2I blockPos) = getWorkingGrid(blockToPlace);
 
-        highlight.transform.position = blockCenterOffset + worldPos;
-        highlight.transform.localRotation = grid.transform.localRotation;
+        if(grid == null) {
+            Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Quaternion worldRot = Camera.main.transform.rotation;
 
-        if(Input.GetButtonUp("Fire1")) {
-            grid.TryAddBlock(BlockToPlace(selectedItem), blockPos, rotation);
-        }
-        if(Input.GetButtonUp("Fire2")) {
-            //TODO: A game manager that controls both grids and items should be responsible for spawning items/blocks
-            Block removedBlock = grid.TryRemoveBlock(blockPos);
+            highlight.transform.position = worldPos;
+            highlight.transform.localRotation = worldRot;
 
-            if(removedBlock != null) {
-                Item spawnedItem = Instantiate(removedBlock.createsItem);
-                spawnedItem.transform.position = grid.ConvertBlockSpaceToWorldSpace(blockPos);
+            if(Input.GetButtonUp("Fire1")) {
+                gameManager.createGrid(worldPos, worldRot, blockToPlace, rotation);
+            }
+        } else {
+            Vector2 blockCenterOffset = grid.transform.TransformDirection(blockToPlace.CenterOffset(rotation));
+            Vector2 worldPos = grid.ConvertBlockSpaceToWorldSpace(blockPos);
+
+            highlight.transform.position = blockCenterOffset + worldPos;
+            highlight.transform.localRotation = grid.transform.localRotation;
+
+            if(Input.GetButtonUp("Fire1")) {
+                grid.TryAddBlock(blockToPlace, blockPos, rotation);
+            }
+            if(Input.GetButtonUp("Fire2")) {
+                //TODO: A game manager that controls both grids and items should be responsible for spawning items/blocks
+                Block removedBlock = grid.TryRemoveBlock(blockPos);
+
+                if(removedBlock != null) {
+                    Item spawnedItem = Instantiate(removedBlock.createsItem);
+                    spawnedItem.transform.position = grid.ConvertBlockSpaceToWorldSpace(blockPos);
+                }
             }
         }
+
     }
 
     private Block BlockToPlace(int type) {
         return gameManager.allItems[selectedItem].CreatesBlock();
+    }
+
+    private (Grid, Vector2I) getWorkingGrid(Block blockToPlace) {
+        foreach(Grid grid in gameManager.allGrids()) {
+            Vector2I blockPos = getBlockPosForGrid(grid, blockToPlace.isLarge);
+            if(grid.CanAttach(blockToPlace, blockPos, rotation) && grid.CanPlace(blockToPlace, blockPos, rotation)) {
+                return (grid, blockPos);
+            }
+        }
+
+        return (null, Vector2I.ZERO);
+    }
+
+    private Vector2I getBlockPosForGrid(Grid grid, bool large) {
+        Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        if(large) {
+            return grid.ConvertWorldSpaceToLargeBlockSpace(worldMousePos);
+        } else {
+            return grid.ConvertWorldSpaceToBlockSpace(worldMousePos);
+        }
     }
 }

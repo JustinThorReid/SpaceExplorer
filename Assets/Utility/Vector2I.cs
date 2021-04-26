@@ -11,6 +11,7 @@ public struct Vector2I
     public static readonly Vector2I[] DIRECTIONS = { UP, RIGHT, DOWN, LEFT };
 
     public static readonly Vector2I ONE = new Vector2I(1, 1);
+    public static readonly Vector2I ZERO = new Vector2I(0, 0);
 
     public static readonly sbyte DIR_UP = 0;
     public static readonly sbyte DIR_RIGHT = 1;

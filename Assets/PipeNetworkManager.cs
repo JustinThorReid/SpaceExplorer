@@ -19,7 +19,7 @@ public class PipeNetworkManager : MonoBehaviour
         Color[] colors = { Color.red, Color.blue, Color.green, Color.magenta, Color.white, Color.black};
 
         Grid grid = GetComponent<Grid>();
-        Vector2 blockOffset = transform.TransformDirection(Grid.BLOCK_OFFSET);
+        Vector2 blockOffset = grid.transform.TransformDirection(Grid.BLOCK_OFFSET);
 
         pipeNetworks.ToList().ForEach(network => {
             Gizmos.color = colors[network.networkID % colors.Length];
@@ -29,7 +29,7 @@ public class PipeNetworkManager : MonoBehaviour
 
                 for(sbyte i = 0; i < 4; i++) {
                     if(entry.Value.HasConnectionPoint(i)) {
-                        Vector2 dest = grid.transform.TransformPoint(Vector2I.DIRECTIONS[i] * Grid.BLOCK_OFFSET.x) + new Vector3(center.x, center.y, 0);
+                        Vector2 dest = grid.transform.TransformDirection(Vector2I.DIRECTIONS[i] * Grid.BLOCK_OFFSET.x) + new Vector3(center.x, center.y, 0);
 
                         if(network.HasConnection(entry.Key, i)) {
                             Gizmos.DrawLine(center, dest);
