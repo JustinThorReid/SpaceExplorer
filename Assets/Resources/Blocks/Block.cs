@@ -5,7 +5,8 @@ using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
 public class Block : MonoBehaviour {
-    public uint layer = 0;
+    public static readonly byte BLOCK_LAYERS = 5;
+    public byte layer = 0;
     public bool hasCollider = true;
     public float mass = 80;
     public bool isLarge = true;
@@ -132,21 +133,6 @@ public class Block : MonoBehaviour {
 
     public void Init(byte rotation) {
         this.rotation = rotation;
-    }
-
-    public bool CanBePlacedIn(List<Block> column) {
-        foreach(Block existing in column) {
-            if(existing.layer == this.layer)
-                return false;
-        }
-
-        if(this.layer == 10) {
-            return column.Exists(existing => {
-                return existing.layer == 0;
-            });
-        } else {
-            return true;
-        }
     }
 
     public bool CanBeAttached(int direction, Block other) {

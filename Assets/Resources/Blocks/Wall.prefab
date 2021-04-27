@@ -96,10 +96,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a23648678e44bb44fa6b0baee4d9b13a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layer: 10
+  layer: 2
   hasCollider: 1
   mass: 80
   isLarge: 1
+  size:
+    x: 1
+    y: 1
+  blockPos:
+    x: 0
+    y: 0
   spritesRotated:
   - {fileID: -275982083047838338, guid: eb3ac984e1820534fa0de46e51fd4ec8, type: 3}
   rotation: 0

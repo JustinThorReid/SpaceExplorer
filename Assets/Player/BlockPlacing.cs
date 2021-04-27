@@ -103,11 +103,13 @@ public class BlockPlacing : MonoBehaviour
     private (Grid, Vector2I) getWorkingGrid(Block blockToPlace) {
         foreach(Grid grid in gameManager.allGrids()) {
             Vector2I blockPos = getBlockPosForGrid(grid, blockToPlace.isLarge);
-            if(grid.CanAttach(blockToPlace, blockPos, rotation) && grid.CanPlace(blockToPlace, blockPos, rotation)) {
+            if(grid.HasBlock(blockPos)) {
+                return (grid, blockPos);
+            }
+            if(grid.TestBlockPlacement(blockToPlace, blockPos, rotation)) {
                 return (grid, blockPos);
             }
         }
-
         return (null, Vector2I.ZERO);
     }
 

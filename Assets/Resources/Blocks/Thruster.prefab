@@ -123,7 +123,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ec0d29dab5176c42826e59d2ea638c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layer: 0
+  layer: 1
   hasCollider: 1
   mass: 100
   isLarge: 1
@@ -141,6 +141,7 @@ MonoBehaviour:
   rotation: 0
   createsItem: {fileID: 6107568717372161505, guid: 11e5098b0d8b5d5478f7724ea937c4e2, type: 3}
   thrusterEfect: {fileID: 4602099735498828820}
+  internalTankSize: 1000
 --- !u!1 &4602099735498828820
 GameObject:
   m_ObjectHideFlags: 0

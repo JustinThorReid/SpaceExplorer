@@ -15,8 +15,8 @@ public class Grid : MonoBehaviour {
 
     public static readonly Vector2 BLOCK_OFFSET = new Vector2(UNITS_PER_BLOCK / 2f, UNITS_PER_BLOCK / 2f);
 
-    private Dictionary<Vector2I, List<Block>> blockData;
-    private Dictionary<Vector2I, List<Block>> largeBlockData;
+    private Dictionary<Vector2I, Block[]> blockData;
+    private Dictionary<Vector2I, Block[]> largeBlockData;
     private ShipManager ship;
     private Rigidbody2D rb;
 
@@ -24,8 +24,8 @@ public class Grid : MonoBehaviour {
         ship = GetComponent<ShipManager>();
         rb = GetComponent<Rigidbody2D>();
 
-        blockData = new Dictionary<Vector2I, List<Block>>();
-        largeBlockData = new Dictionary<Vector2I, List<Block>>();
+        blockData = new Dictionary<Vector2I, Block[]>();
+        largeBlockData = new Dictionary<Vector2I, Block[]>();
     }
 
     void Start() {
@@ -43,13 +43,27 @@ public class Grid : MonoBehaviour {
     /// <param name="bigBlockPos"></param>
     /// <returns></returns>
     private ReadOnlyCollection<Block> GetLargeBlocksAtPos(Vector2I blockPos) {
-        Vector2I largeBlockPos = GetContainingLargeBlockPos(blockPos);
-        List<Block> blocks;
-        if(!largeBlockData.TryGetValue(largeBlockPos, out blocks)) {
+        Block[] blocks;
+        if(!largeBlockData.TryGetValue(blockPos, out blocks)) {
             return new List<Block>().AsReadOnly();
         }
 
-        return blocks.AsReadOnly();
+        return Array.AsReadOnly(blocks);
+    }
+
+    /// <summary>
+    /// Gets only large blocks at a position (All block positions are in "small block" space)
+    /// </summary>
+    /// <param name="bigBlockPos"></param>
+    /// <returns></returns>
+    private Block GetLargeBlockAtPos(Vector3Int blockPos) {
+        Vector2I blockPos2i = new Vector2I(blockPos.x, blockPos.y);
+        Block[] blocks;
+        if(!largeBlockData.TryGetValue(blockPos2i, out blocks)) {
+            return null;
+        }
+
+        return blocks[blockPos.z];
     }
 
     /// <summary>
@@ -58,12 +72,27 @@ public class Grid : MonoBehaviour {
     /// <param name="bigBlockPos"></param>
     /// <returns></returns>
     private ReadOnlyCollection<Block> GetSmallBlocksAtPos(Vector2I blockPos) {
-        List<Block> blocks;
+        Block[] blocks;
         if(!blockData.TryGetValue(blockPos, out blocks)) {
             return new List<Block>().AsReadOnly();
         }
 
-        return blocks.AsReadOnly();
+        return Array.AsReadOnly(blocks);
+    }
+
+    /// <summary>
+    /// Gets only small/regular blocks at a position (All block positions are in "small block" space)
+    /// </summary>
+    /// <param name="bigBlockPos"></param>
+    /// <returns></returns>
+    private Block GetSmallBlockAtPos(Vector3Int blockPos) {
+        Vector2I blockPos2i = new Vector2I(blockPos.x, blockPos.y);
+        Block[] blocks;
+        if(!blockData.TryGetValue(blockPos2i, out blocks)) {
+            return null;
+        }
+
+        return blocks[blockPos.z];
     }
 
     /// <summary>
@@ -95,14 +124,14 @@ public class Grid : MonoBehaviour {
             testPos.y = blockPos.y + placedSize.y + 1;
 
             foreach(Block block in GetIntersectingBlocks(testPos)) {
-                if(block.CanBeAttached(Vector2I.DIR_DOWN, blockType)) {
+                if(block != null && block.CanBeAttached(Vector2I.DIR_DOWN, blockType)) {
                     return true;
                 }
             }
 
             testPos.y = blockPos.y - 1;
             foreach(Block block in GetIntersectingBlocks(testPos)) {
-                if(block.CanBeAttached(Vector2I.DIR_UP, blockType)) {
+                if(block != null && block.CanBeAttached(Vector2I.DIR_UP, blockType)) {
                     return true;
                 }
             }
@@ -113,14 +142,14 @@ public class Grid : MonoBehaviour {
             testPos.x = blockPos.x + placedSize.x + 1;
 
             foreach(Block block in GetIntersectingBlocks(testPos)) {
-                if(block.CanBeAttached(Vector2I.DIR_LEFT, blockType)) {
+                if(block != null && block.CanBeAttached(Vector2I.DIR_LEFT, blockType)) {
                     return true;
                 }
             }
 
             testPos.x = blockPos.x - 1;
             foreach(Block block in GetIntersectingBlocks(testPos)) {
-                if(block.CanBeAttached(Vector2I.DIR_RIGHT, blockType)) {
+                if(block != null && block.CanBeAttached(Vector2I.DIR_RIGHT, blockType)) {
                     return true;
                 }
             }
@@ -129,20 +158,49 @@ public class Grid : MonoBehaviour {
         return false;
     }
 
-    public bool CanPlace(Block blockType, Vector2I blockPos, byte rotation) {
+    public bool HasSupport(Block blockType, Vector2I blockPos, byte rotation) {
         Debug.Assert(blockType.gameObject.scene.rootCount == 0, "Expecting a prefab original");
 
+        if(blockType.layer == 0) return true;
+
+        byte layerRequired = (byte)(blockType.layer - 1);
         Vector2I placedSize = blockType.PlacedSizeSmall(rotation);
-        Vector2I testPos = new Vector2I();
+        Vector3Int testPos = new Vector3Int(0, 0, layerRequired);
         for(testPos.x = blockPos.x; testPos.x < blockPos.x + placedSize.x; testPos.x++) {
             for(testPos.y = blockPos.y; testPos.y < blockPos.y + placedSize.y; testPos.y++) {
-                if(!blockType.CanBePlacedIn(GetIntersectingBlocks(testPos))) {
+                if(GetBlockAtPos(testPos) == null) {
                     return false;
                 }
             }
         }
 
         return true;
+    }
+
+    public bool IsOccupied(Block blockType, Vector2I blockPos, byte rotation) {
+        Debug.Assert(blockType.gameObject.scene.rootCount == 0, "Expecting a prefab original");
+
+        Vector2I placedSize = blockType.PlacedSizeSmall(rotation);
+        Vector3Int testPos = new Vector3Int(0, 0, blockType.layer);
+        for(testPos.x = blockPos.x; testPos.x < blockPos.x + placedSize.x; testPos.x++) {
+            for(testPos.y = blockPos.y; testPos.y < blockPos.y + placedSize.y; testPos.y++) {
+                if(GetBlockAtPos(testPos) != null) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public Block GetBlockAtPos(Vector3Int blockPos) {
+        Vector3Int largePos = GetContainingLargeBlockPos(blockPos);
+        Block largeBlock = GetLargeBlockAtPos(largePos);
+
+        if(largeBlock != null)
+            return largeBlock;
+
+        return GetSmallBlockAtPos(blockPos);
     }
 
     public List<Block> GetIntersectingBlocks(Vector2I blockPos) {
@@ -152,6 +210,15 @@ public class Grid : MonoBehaviour {
         ReadOnlyCollection<Block> miniBlocks = GetSmallBlocksAtPos(blockPos);
 
         return bigBlocks.Concat(miniBlocks).ToList();
+    }
+
+    public bool HasBlock(Vector2I blockPos) {
+        foreach(Block b in GetIntersectingBlocks(blockPos)) {
+            if(b != null)
+                return true;
+        }
+
+        return false;
     }
 
     public Block ForcePlaceBlock(Block block, Vector2I blockPos, byte rotation) {
@@ -168,7 +235,7 @@ public class Grid : MonoBehaviour {
         return null;
     }
     public bool TestBlockPlacement(Block block, Vector2I blockPos, byte rotation) {
-        return CanPlace(block, blockPos, rotation) && CanAttach(block, blockPos, rotation);
+        return !IsOccupied(block, blockPos, rotation) && (HasSupport(block, blockPos, rotation) || CanAttach(block, blockPos, rotation));
     }
 
     /// <summary>
@@ -180,23 +247,30 @@ public class Grid : MonoBehaviour {
     /// <returns></returns>
     public Block TryRemoveBlock(Vector2I blockPos) {
         Block removed = null;
-        IOrderedEnumerable<Block> blocks = GetSmallBlocksAtPos(blockPos).OrderByDescending(block => block.layer);
-        if(blocks.Count() > 0) {
-            removed = blocks.First();
-            RemoveBlock(removed);
-        } else {
+
+        ReadOnlyCollection<Block> blocks = GetSmallBlocksAtPos(blockPos);
+        for(int i = blocks.Count(); i > 0; i--) {
+            removed = blocks[i - 1];
+            if(removed != null)
+                break;
+        }
+
+        if(removed == null) {
             Vector2I largePos = GetContainingLargeBlockPos(blockPos);
-            IOrderedEnumerable<Block> bigBlocks = GetLargeBlocksAtPos(largePos).OrderByDescending(block => block.layer);
-            if(bigBlocks.Count() > 0) {
-                removed = bigBlocks.First();
-                RemoveBlock(removed);
+            blocks = GetLargeBlocksAtPos(largePos);
+
+            for(int i = blocks.Count(); i > 0; i--) {
+                removed = blocks[i - 1];
+                if(removed != null)
+                    break;
             }
         }
 
         if(removed != null) {
+            RemoveBlock(removed);
             removed.OnRemove(ship, blockPos);
         }
-
+        
         return removed;
     }
 
@@ -228,24 +302,32 @@ public class Grid : MonoBehaviour {
         if(rb != null) {
             recalculateMass();
         }
+
+        separateUnconnectedBlocks();
     }
 
-    private void setData(Dictionary<Vector2I, List<Block>> dict, Vector2I pos, Block block) {
-        List<Block> column = null;
+    private void separateUnconnectedBlocks() {
+
+    }
+
+
+    private void setData(Dictionary<Vector2I, Block[]> dict, Vector2I pos, Block block) {
+        Block[] column = null;
         if(!dict.TryGetValue(pos, out column)) {
-            column = new List<Block>(3);
+            column = new Block[Block.BLOCK_LAYERS];
             dict.Add(pos, column);
         }
 
-        column.Add(block);
+        Debug.Assert(column[block.layer] == null, "Overriding block data at [" + pos.x + ", " + pos.y + ", " + block.layer + "]");
+        column[block.layer] = block;
     }
 
-    private void removeData(Dictionary<Vector2I, List<Block>> dict, Vector2I pos, Block block) {
+    private void removeData(Dictionary<Vector2I, Block[]> dict, Vector2I pos, Block block) {
         Debug.Assert(dict.ContainsKey(pos), "Attempting to remove data from dict that does not contain key");
 
-        List<Block> column = null;
+        Block[] column = null;
         if(dict.TryGetValue(pos, out column)) {
-            column.Remove(block);
+            column[block.layer] = null;
         }
     }
 
@@ -281,8 +363,10 @@ public class Grid : MonoBehaviour {
 
         float mass = 0;
         HashSet<Block> blocks = new HashSet<Block>();
-        foreach(List<Block> column in blockData.Values) {
+        foreach(Block[] column in blockData.Values) {
             foreach(Block block in column) {
+                if(block == null)
+                    continue;
                 if(blocks.Contains(block)) {
                     continue;
                 }
@@ -292,8 +376,12 @@ public class Grid : MonoBehaviour {
             }
         }
 
-        foreach(List<Block> column in largeBlockData.Values) {
+        foreach(Block[] column in largeBlockData.Values) {
             foreach(Block block in column) {
+                if(block == null) {
+                    continue;
+                }
+
                 if(blocks.Contains(block)) {
                     continue;
                 }
@@ -378,5 +466,14 @@ public class Grid : MonoBehaviour {
 
         Vector2I result = (blockPos + new Vector2I(1000000, 1000000)) / BLOCKS_PER_UNIT;
         return (result * BLOCKS_PER_LARGE_BLOCK) - new Vector2I(1000000, 1000000);
+    }
+
+    private Vector3Int GetContainingLargeBlockPos(Vector3Int blockPos) {
+        Debug.Assert(blockPos.x > -1000000, "Block position too low for negative rounding");
+        Debug.Assert(blockPos.y > -1000000, "Block position too low for negative rounding");
+
+        Vector2I result = (new Vector2I(blockPos.x, blockPos.y) + new Vector2I(1000000, 1000000)) / BLOCKS_PER_UNIT;
+        result = (result * BLOCKS_PER_LARGE_BLOCK) - new Vector2I(1000000, 1000000);
+        return new Vector3Int(result.x, result.y, blockPos.z);
     }
 }
